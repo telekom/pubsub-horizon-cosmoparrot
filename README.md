@@ -5,6 +5,7 @@ SPDX-License-Identifier: Apache-2.0
 -->
 
 <p align="center">
+  <img src="docs/img/cosmoparrot-logo.svg" alt="Cosmoparrot logo" width="200">
   <h1 align="center">Cosmoparrot</h1>
 </p>
 
