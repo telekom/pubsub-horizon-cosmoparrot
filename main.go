@@ -32,6 +32,9 @@ func setResponseHeaders(c *fiber.Ctx) {
 			}
 		}
 	}
+
+	// set some default response headers
+	c.Set("Cache-Control", "max-age=0, must-revalidate")
 }
 
 func main() {
@@ -56,7 +59,10 @@ func main() {
 		var responseBody any
 
 		if len(c.Body()) > 0 {
-			return json.Unmarshal(c.Body(), &responseBody)
+			err := json.Unmarshal(c.Body(), &responseBody)
+			if err != nil {
+				return err
+			}
 		}
 
 		setResponseHeaders(c)
