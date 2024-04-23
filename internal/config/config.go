@@ -19,13 +19,15 @@ func init() {
 }
 
 type configuration struct {
-	Port         int `mapstructure:"port"`
-	ResponseCode int `mapstructure:"responseCode"`
+	Port                      int      `mapstructure:"port"`
+	ResponseCode              int      `mapstructure:"responseCode"`
+	MethodResponseCodeMapping []string `mapstructure:"methodResponseCodeMapping"`
 }
 
 func setDefaults() {
 	viper.SetDefault("port", 8080)
 	viper.SetDefault("responseCode", 200)
+	viper.SetDefault("methodResponseCodeMapping", []string{})
 }
 
 func loadConfiguration() {

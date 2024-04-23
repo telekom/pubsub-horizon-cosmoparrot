@@ -9,8 +9,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"log"
+	"strconv"
 	"strings"
 )
 
@@ -60,7 +61,8 @@ func main() {
 
 		setResponseHeaders(c)
 
-		return c.Status(config.LoadedConfiguration.ResponseCode).JSON(&response{
+		responseCode := decideResponseCode(c)
+		return c.Status(responseCode).JSON(&response{
 			Path:    c.Path(),
 			Method:  c.Method(),
 			Headers: c.GetReqHeaders(),
@@ -69,4 +71,27 @@ func main() {
 	})
 
 	log.Fatal(app.Listen(fmt.Sprintf(":%d", config.LoadedConfiguration.Port)))
+}
+
+func decideResponseCode(c *fiber.Ctx) int {
+	mapping := config.LoadedConfiguration.MethodResponseCodeMapping
+
+	for _, m := range mapping {
+		s := strings.Split(m, ":")
+		if len(s) == 2 {
+			if strings.ToUpper(strings.TrimSpace(s[0])) == c.Method() {
+
+				responseCode, err := strconv.Atoi(s[1])
+				if err != nil {
+					log.Errorf("could not successfully parse method response code mapping configuration. Fallback to response code: %d", config.LoadedConfiguration.ResponseCode)
+
+					return config.LoadedConfiguration.ResponseCode
+				}
+
+				return responseCode
+			}
+		}
+	}
+
+	return config.LoadedConfiguration.ResponseCode
 }
