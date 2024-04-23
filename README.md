@@ -50,11 +50,11 @@ docker build -t cosmoparrot:latest  .
 ## Configuration
 Cosmoparrot supports configuration via environment variables and/or a configuration file (`config.yml`). The configuration file has to be located in the same directory as the executable.
 
-| Path                       | Variable                 | Type | Default | Description                                                                              |
-|----------------------------|--------------------------|------|---------|------------------------------------------------------------------------------------------|
-| port                       | COSMOPARROT_PORT         | int  | 8080    | Sets the port to listen on.                                                              |
-| responseCode               | COSMOPARROT_RESPONSECODE | int  | 200     | Enforces a specific HTTP response code. Can be used to test different consumer behavior. |
-
+| Path                        | Variable                              | Type   | Default | Description                                                                              |
+|-----------------------------|---------------------------------------|--------|---------|------------------------------------------------------------------------------------------|
+| port                        | COSMOPARROT_PORT                      | int    | 8080    | Sets the port to listen on.                                                              |
+| responseCode                | COSMOPARROT_RESPONSECODE              | int    | 200     | Enforces a specific HTTP response code. Can be used to test different consumer behavior. |
+| methodResponseCodeMapping   | COSMOPARROT_METHODRESPONSECODEMAPPING | string | ""      | Control the HTTP response code per HTTP method, for example: "POST:401"                  |
 
 ## Running Cosmoparrot
 ### Locally
