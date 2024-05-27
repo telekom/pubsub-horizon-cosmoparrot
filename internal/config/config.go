@@ -22,12 +22,14 @@ type configuration struct {
 	Port                      int      `mapstructure:"port"`
 	ResponseCode              int      `mapstructure:"responseCode"`
 	MethodResponseCodeMapping []string `mapstructure:"methodResponseCodeMapping"`
+	ReadBufferSize            int      `mapstructure:"readBufferSize"`
 }
 
 func setDefaults() {
 	viper.SetDefault("port", 8080)
 	viper.SetDefault("responseCode", 200)
 	viper.SetDefault("methodResponseCodeMapping", []string{})
+	viper.SetDefault("readBufferSize", 4096)
 }
 
 func loadConfiguration() {
