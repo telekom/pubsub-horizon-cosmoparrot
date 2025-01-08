@@ -38,7 +38,9 @@ func setResponseHeaders(c *fiber.Ctx) {
 }
 
 func main() {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		ReadBufferSize: config.LoadedConfiguration.ReadBufferSize,
+	})
 
 	app.Use(logger.New(logger.Config{
 		Format:   "${green}→ Request received:\n${reset}${time} | ${status} - ${method} ${path}\n${green}→ Request headers:${magenta}\n${custom_tag}${green}→ Request body:${cyan}\n${body}${reset}\n",
