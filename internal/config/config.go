@@ -22,12 +22,14 @@ type configuration struct {
 	Port                      int      `mapstructure:"port"`
 	ResponseCode              int      `mapstructure:"responseCode"`
 	MethodResponseCodeMapping []string `mapstructure:"methodResponseCodeMapping"`
+	StoreKeyRequestHeaders    []string `mapstructure:"storeKeyRequestHeaders"`
 }
 
 func setDefaults() {
 	viper.SetDefault("port", 8080)
 	viper.SetDefault("responseCode", 200)
 	viper.SetDefault("methodResponseCodeMapping", []string{})
+	viper.SetDefault("storeKeyRequestHeaders", []string{"x-event-id"})
 }
 
 func loadConfiguration() {
