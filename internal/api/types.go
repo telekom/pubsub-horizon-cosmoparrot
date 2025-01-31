@@ -4,7 +4,10 @@
 
 package api
 
+import "time"
+
 type response struct {
+	Time    time.Time           `json:"time"`
 	Path    string              `json:"path"`
 	Method  string              `json:"method"`
 	Headers map[string][]string `json:"headers,omitempty"`

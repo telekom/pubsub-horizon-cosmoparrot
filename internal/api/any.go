@@ -14,6 +14,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func handleAnyRequest(c *fiber.Ctx) error {
@@ -30,6 +31,7 @@ func handleAnyRequest(c *fiber.Ctx) error {
 	setResponseHeaders(c)
 
 	resp := &response{
+		Time:    time.Now(),
 		Path:    c.Path(),
 		Method:  c.Method(),
 		Headers: c.GetReqHeaders(),

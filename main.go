@@ -4,8 +4,16 @@
 
 package main
 
-import "cosmoparrot/internal/api"
+import (
+	"cosmoparrot/internal/api"
+	"embed"
+	_ "embed"
+)
+
+//go:embed web/*
+var webDir embed.FS
 
 func main() {
+	api.AddHandlers(webDir)
 	api.Listen()
 }

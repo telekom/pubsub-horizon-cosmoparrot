@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"sort"
 )
 
 func handleGetAllRequests(c *fiber.Ctx) error {
@@ -27,6 +28,10 @@ func handleGetAllRequests(c *fiber.Ctx) error {
 
 	if list == nil {
 		list = []*response{}
+	} else {
+		sort.Slice(list, func(i, j int) bool {
+			return list[i].Time.After(list[j].Time)
+		})
 	}
 
 	return c.Status(fiber.StatusOK).JSON(list)

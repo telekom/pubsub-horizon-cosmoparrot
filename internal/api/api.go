@@ -6,9 +6,12 @@ package api
 
 import (
 	"cosmoparrot/internal/config"
+	"embed"
 	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
+	"github.com/gofiber/fiber/v2/middleware/filesystem"
+	"net/http"
 )
 
 var app *fiber.App
@@ -16,6 +19,14 @@ var app *fiber.App
 func init() {
 	app = fiber.New()
 	app.Use(createNewLogHandler())
+
+}
+
+func AddHandlers(f embed.FS) {
+	app.Use("/", filesystem.New(filesystem.Config{
+		Root:       http.FS(f),
+		PathPrefix: "web",
+	}))
 
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
