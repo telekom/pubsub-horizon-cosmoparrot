@@ -29,7 +29,7 @@ func setDefaults() {
 	viper.SetDefault("port", 8080)
 	viper.SetDefault("responseCode", 200)
 	viper.SetDefault("methodResponseCodeMapping", []string{})
-	viper.SetDefault("storeKeyRequestHeaders", []string{"x-event-id"})
+	viper.SetDefault("storeKeyRequestHeaders", []string{"x-request-key"})
 }
 
 func loadConfiguration() {

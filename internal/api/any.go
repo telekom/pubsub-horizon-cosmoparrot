@@ -1,10 +1,13 @@
+// Copyright 2024 Deutsche Telekom IT GmbH
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package api
 
 import (
 	"cosmoparrot/internal/cache"
 	"cosmoparrot/internal/config"
 	"encoding/json"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	go_cache "github.com/patrickmn/go-cache"
@@ -13,55 +16,49 @@ import (
 	"strings"
 )
 
-func createNewEchoHandler() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var responseBody any
+func handleAnyRequest(c *fiber.Ctx) error {
+	var responseBody any
 
-		if len(c.Body()) > 0 {
-			err := json.Unmarshal(c.Body(), &responseBody)
-			if err != nil {
-				return err
-			}
+	if len(c.Body()) > 0 {
+		err := json.Unmarshal(c.Body(), &responseBody)
+		if err != nil {
+			log.Errorf("failed to deserialize data, error: %s", err.Error())
+			return c.SendStatus(fiber.StatusInternalServerError)
 		}
-
-		var storeKey string
-		storeKeyRequestHeaders := getStoreKeyRequestHeaders()
-
-		for k, v := range c.GetReqHeaders() {
-			if slices.Contains(storeKeyRequestHeaders, strings.ToLower(k)) {
-				if len(v) > 0 {
-					storeKey = v[0]
-					break
-				}
-			}
-		}
-
-		setResponseHeaders(c)
-
-		responseCode := decideResponseCode(c)
-
-		resp := &response{
-			Path:    c.Path(),
-			Method:  c.Method(),
-			Headers: c.GetReqHeaders(),
-			Body:    responseBody,
-		}
-
-		jsonData, _ := json.Marshal(resp)
-
-		if storeKey != "" {
-			fmt.Printf("writing to cache key %s \n", storeKey)
-
-			cache.Current.Set("123", string(jsonData), go_cache.DefaultExpiration)
-
-			fmt.Println(cache.Current.Items())
-		}
-
-		return c.Status(responseCode).JSON(resp)
 	}
+
+	setResponseHeaders(c)
+
+	resp := &response{
+		Path:    c.Path(),
+		Method:  c.Method(),
+		Headers: c.GetReqHeaders(),
+		Body:    responseBody,
+	}
+
+	// write request to store if request key is found
+	// in the request headers
+	if key := extractStoreKey(c); key != "" {
+		log.Debugf("writing to cache with key %s", key)
+		jsonData, err := json.Marshal(resp)
+		if err != nil {
+			log.Errorf("failed to serialize data, error: %s", err.Error())
+
+			return c.SendStatus(fiber.StatusInternalServerError)
+		}
+
+		// write to store
+		cache.Current.Set(key, string(jsonData), go_cache.DefaultExpiration)
+	}
+
+	return c.Status(getResponseCode(c)).JSON(resp)
 }
 
-func getStoreKeyRequestHeaders() []string {
+func handleStoreWrites() {
+
+}
+
+func extractStoreKey(c *fiber.Ctx) string {
 	list := config.LoadedConfiguration.StoreKeyRequestHeaders
 
 	var result []string
@@ -69,7 +66,15 @@ func getStoreKeyRequestHeaders() []string {
 		result = append(result, strings.ToLower(v))
 	}
 
-	return result
+	for k, v := range c.GetReqHeaders() {
+		if slices.Contains(result, strings.ToLower(k)) {
+			if len(v) > 0 {
+				return strings.Clone(v[0])
+			}
+		}
+	}
+
+	return ""
 }
 
 func setResponseHeaders(c *fiber.Ctx) {
@@ -87,7 +92,7 @@ func setResponseHeaders(c *fiber.Ctx) {
 	c.Set("Current-Control", "max-age=0, must-revalidate")
 }
 
-func decideResponseCode(c *fiber.Ctx) int {
+func getResponseCode(c *fiber.Ctx) int {
 	mapping := config.LoadedConfiguration.MethodResponseCodeMapping
 
 	for _, m := range mapping {

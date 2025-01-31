@@ -1,28 +1,52 @@
+// Copyright 2024 Deutsche Telekom IT GmbH
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package api
 
 import (
 	"cosmoparrot/internal/cache"
 	"encoding/json"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 )
 
-func handleStoreAccess(c *fiber.Ctx) error {
-	storeKey := c.Params("key")
+func handleGetAllRequests(c *fiber.Ctx) error {
+	var list []*response
+	for _, v := range cache.Current.Items() {
+		var resp *response
 
-	if storeKey != "" {
-		fmt.Printf("getting cache key %s \n", storeKey)
-		fmt.Println(cache.Current.Items())
+		err := json.Unmarshal([]byte(v.Object.(string)), &resp)
+		if err != nil {
+			log.Errorf("failed to deserialize data, error: %s", err.Error())
+			return c.SendStatus(fiber.StatusInternalServerError)
+		}
+
+		list = append(list, resp)
+	}
+
+	if list == nil {
+		list = []*response{}
+	}
+
+	return c.Status(fiber.StatusOK).JSON(list)
+}
+func handleGetRequestByKey(c *fiber.Ctx) error {
+	if storeKey := c.Params("key"); storeKey != "" {
+		log.Debugf("reading from cache with key %s", storeKey)
 
 		if entry, found := cache.Current.Get(storeKey); found {
-			jsonString := entry.(string)
-
 			var resp *response
-			if err := json.Unmarshal([]byte(jsonString), &resp); err == nil {
-				return c.Status(fiber.StatusOK).JSON(resp)
+
+			err := json.Unmarshal([]byte(entry.(string)), &resp)
+			if err != nil {
+				log.Errorf("failed to deserialize data, error: %s", err.Error())
+				return c.SendStatus(fiber.StatusInternalServerError)
 			}
+
+			return c.Status(fiber.StatusOK).JSON(resp)
 		}
 	}
 
-	return c.SendStatus(fiber.StatusBadRequest)
+	return c.SendStatus(fiber.StatusNotFound)
 }

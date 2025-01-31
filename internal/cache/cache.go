@@ -1,3 +1,7 @@
+// Copyright 2024 Deutsche Telekom IT GmbH
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package cache
 
 import (
@@ -8,5 +12,5 @@ import (
 var Current *go_cache.Cache
 
 func init() {
-	Current = go_cache.New(24*time.Hour, 10*time.Minute)
+	Current = go_cache.New(1*time.Hour, 10*time.Minute)
 }

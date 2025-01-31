@@ -1,3 +1,7 @@
+// Copyright 2024 Deutsche Telekom IT GmbH
+//
+// SPDX-License-Identifier: Apache-2.0
+
 package api
 
 import (
@@ -15,9 +19,10 @@ func init() {
 
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
-	v1.Get("/requests/:key", handleStoreAccess)
+	v1.Get("/requests", handleGetAllRequests)
+	v1.Get("/requests/:key", handleGetRequestByKey)
 
-	app.All("/*", createNewEchoHandler())
+	app.Use(handleAnyRequest)
 }
 
 func Listen() {
