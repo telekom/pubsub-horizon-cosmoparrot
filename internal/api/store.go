@@ -13,21 +13,21 @@ import (
 )
 
 func handleGetAllRequests(c *fiber.Ctx) error {
-	var list []*response
+	var list []*request
 	for _, v := range cache.Current.Items() {
-		var resp *response
+		var requests []*request
 
-		err := json.Unmarshal([]byte(v.Object.(string)), &resp)
+		err := json.Unmarshal([]byte(v.Object.(string)), &requests)
 		if err != nil {
 			log.Errorf("failed to deserialize data, error: %s", err.Error())
 			return c.SendStatus(fiber.StatusInternalServerError)
 		}
 
-		list = append(list, resp)
+		list = append(list, requests...)
 	}
 
 	if list == nil {
-		list = []*response{}
+		list = []*request{}
 	} else {
 		sort.Slice(list, func(i, j int) bool {
 			return list[i].Time.After(list[j].Time)
@@ -37,19 +37,23 @@ func handleGetAllRequests(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).JSON(list)
 }
 func handleGetRequestByKey(c *fiber.Ctx) error {
-	if storeKey := c.Params("key"); storeKey != "" {
-		log.Debugf("reading from cache with key %s", storeKey)
+	if key := c.Params("key"); key != "" {
+		log.Debugf("reading from cache with key %s", key)
 
-		if entry, found := cache.Current.Get(storeKey); found {
-			var resp *response
+		if entry, found := cache.Current.Get(key); found {
+			var requests []*request
 
-			err := json.Unmarshal([]byte(entry.(string)), &resp)
+			err := json.Unmarshal([]byte(entry.(string)), &requests)
 			if err != nil {
 				log.Errorf("failed to deserialize data, error: %s", err.Error())
 				return c.SendStatus(fiber.StatusInternalServerError)
 			}
 
-			return c.Status(fiber.StatusOK).JSON(resp)
+			sort.Slice(requests, func(i, j int) bool {
+				return requests[i].Time.After(requests[j].Time)
+			})
+
+			return c.Status(fiber.StatusOK).JSON(requests)
 		}
 	}
 

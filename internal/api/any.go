@@ -30,7 +30,7 @@ func handleAnyRequest(c *fiber.Ctx) error {
 
 	setResponseHeaders(c)
 
-	resp := &response{
+	reqData := &request{
 		Time:    time.Now(),
 		Path:    c.Path(),
 		Method:  c.Method(),
@@ -42,7 +42,21 @@ func handleAnyRequest(c *fiber.Ctx) error {
 	// in the request headers
 	if key := extractStoreKey(c); key != "" {
 		log.Debugf("writing to cache with key %s", key)
-		jsonData, err := json.Marshal(resp)
+
+		var requests []*request
+		if entry, found := cache.Current.Get(key); found {
+			err := json.Unmarshal([]byte(entry.(string)), &requests)
+			if err != nil {
+				log.Errorf("failed to deserialize data, error: %s", err.Error())
+				return c.SendStatus(fiber.StatusInternalServerError)
+			}
+		} else {
+			requests = []*request{}
+		}
+
+		requests = append(requests, reqData)
+
+		jsonData, err := json.Marshal(requests)
 		if err != nil {
 			log.Errorf("failed to serialize data, error: %s", err.Error())
 
@@ -53,7 +67,7 @@ func handleAnyRequest(c *fiber.Ctx) error {
 		cache.Current.Set(key, string(jsonData), go_cache.DefaultExpiration)
 	}
 
-	return c.Status(getResponseCode(c)).JSON(resp)
+	return c.Status(getResponseCode(c)).JSON(reqData)
 }
 
 func handleStoreWrites() {
@@ -90,7 +104,7 @@ func setResponseHeaders(c *fiber.Ctx) {
 		}
 	}
 
-	// set some default response headers
+	// set some default request headers
 	c.Set("Current-Control", "max-age=0, must-revalidate")
 }
 
@@ -104,7 +118,7 @@ func getResponseCode(c *fiber.Ctx) int {
 
 				responseCode, err := strconv.Atoi(s[1])
 				if err != nil {
-					log.Errorf("could not successfully parse method response code mapping configuration. Fallback to response code: %d", config.LoadedConfiguration.ResponseCode)
+					log.Errorf("could not successfully parse method request code mapping configuration. Fallback to request code: %d", config.LoadedConfiguration.ResponseCode)
 
 					return config.LoadedConfiguration.ResponseCode
 				}

@@ -34,11 +34,33 @@ SPDX-License-Identifier: Apache-2.0
             border-radius: 5px;
             overflow-x: auto;
         }
+        input, button {
+            padding: 10px;
+            margin-right: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #e20074;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #b0005c;
+        }
+        .stop {
+            background-color: gray;
+        }
     </style>
 </head>
 <body>
 <div id="app" class="container">
     <h2>API Request Data</h2>
+    <div>
+        <input v-model="requestKey" type="text" placeholder="Enter key">
+        <button @click="toggleListening">{{ isListening ? "Stop" : "Listen" }}</button>
+    </div>
     <p v-if="error" class="error">{{ error }}</p>
     <div v-if="data.length">
         <div v-for="(item, index) in data" :key="index" class="request-block">
@@ -55,17 +77,20 @@ SPDX-License-Identifier: Apache-2.0
 </div>
 
 <script>
-    const { createApp, ref, onMounted, onUnmounted } = Vue;
+    const { createApp, ref, onUnmounted } = Vue;
 
     createApp({
         setup() {
             const data = ref([]);
             const error = ref(null);
+            const requestKey = ref('');
+            const isListening = ref(false);
             let intervalId = null;
 
             const fetchData = async () => {
+                if (!requestKey.value) return;
                 try {
-                    const response = await axios.get('/api/v1/requests');
+                    const response = await axios.get(`/api/v1/requests/${requestKey.value}`);
                     data.value = response.data;
                     error.value = null;
                 } catch (err) {
@@ -73,16 +98,24 @@ SPDX-License-Identifier: Apache-2.0
                 }
             };
 
-            onMounted(() => {
-                fetchData();
-                intervalId = setInterval(fetchData, 5000);
-            });
+            const toggleListening = () => {
+                if (!requestKey.value) return;
+
+                if (isListening.value) {
+                    clearInterval(intervalId);
+                    isListening.value = false;
+                } else {
+                    fetchData();
+                    intervalId = setInterval(fetchData, 5000);
+                    isListening.value = true;
+                }
+            };
 
             onUnmounted(() => {
                 clearInterval(intervalId);
             });
 
-            return { data, error };
+            return { data, error, requestKey, isListening, toggleListening };
         }
     }).mount("#app");
 </script>
