@@ -7,7 +7,7 @@ module cosmoparrot
 go 1.21.5
 
 require (
-	github.com/gofiber/fiber/v2 v2.52.2
+	github.com/gofiber/fiber/v2 v2.52.5
 	github.com/rs/zerolog v1.32.0
 	github.com/spf13/viper v1.18.2
 )
