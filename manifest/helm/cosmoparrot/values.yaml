@@ -36,3 +36,6 @@ cosmoparrot:
   # storeKeyRequestHeaders:
   #   - X-Request-ID
   #   - X-Correlation-ID
+
+# Add this section for pull secrets
+imagePullSecrets: []
