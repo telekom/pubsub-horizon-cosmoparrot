@@ -7,6 +7,7 @@ package api
 import (
 	"cosmoparrot/internal/cache"
 	"cosmoparrot/internal/config"
+	"cosmoparrot/internal/utils"
 	"encoding/json"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -18,6 +19,11 @@ import (
 )
 
 func handleAnyRequest(c *fiber.Ctx) error {
+	userAgent := c.Get("User-Agent")
+	if c.Path() == "/" && utils.IsBrowser(userAgent) {
+		return c.Next()
+	}
+
 	var responseBody any
 
 	if len(c.Body()) > 0 {

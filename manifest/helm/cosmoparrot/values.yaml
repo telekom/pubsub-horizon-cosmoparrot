@@ -17,7 +17,7 @@ service:
 ingress:
   enabled: false
   host: cosmoparrot.example.com
-  annotations: []
+  annotations:
   tls:
     enabled: false
     secretName: cosmoparrot-tls

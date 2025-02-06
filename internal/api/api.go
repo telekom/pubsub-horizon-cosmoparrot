@@ -23,17 +23,17 @@ func init() {
 }
 
 func AddHandlers(f embed.FS) {
-	app.Use("/", filesystem.New(filesystem.Config{
-		Root:       http.FS(f),
-		PathPrefix: "web",
-	}))
-
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 	v1.Get("/requests", handleGetAllRequests)
 	v1.Get("/requests/:key", handleGetRequestByKey)
 
 	app.Use(handleAnyRequest)
+
+	app.Use("/", filesystem.New(filesystem.Config{
+		Root:       http.FS(f),
+		PathPrefix: "web",
+	}))
 }
 
 func Listen() {
