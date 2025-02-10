@@ -49,6 +49,24 @@ SPDX-License-Identifier: Apache-2.0
         button:hover {
             background-color: #b0005c;
         }
+        .entry {
+            background: #fff;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        .entry-header {
+            font-weight: bold;
+            color: #e20074;
+        }
+        .entry-content {
+            display: none;
+        }
+        .expanded .entry-content {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -60,21 +78,25 @@ SPDX-License-Identifier: Apache-2.0
     </div>
     <p v-if="error" class="error">{{ error }}</p>
     <div v-if="data.length">
-        <div v-for="(item, index) in data" :key="index" class="request-block">
-            <p><strong>Path:</strong> {{ item.path }}</p>
-            <p><strong>Method:</strong> {{ item.method }}</p>
-            <p><strong>Headers:</strong></p>
-            <pre>{{ JSON.stringify(item.headers, null, 2) }}</pre>
-            <p><strong>Body:</strong></p>
-            <pre>{{ JSON.stringify(item.body, null, 2) }}</pre>
-            <hr>
+        <div v-for="(item, index) in data" :key="item.id" class="entry"
+             :class="{ expanded: expandedItems[item.id] }"
+             @click="toggleExpand(item.id)">
+            <p class="entry-header">{{ item.method }} {{ item.path }}</p>
+            <p><strong>Time:</strong> {{ item.time }}</p>
+            <div class="entry-content">
+                <p><strong>Method: </strong>{{ item.method }}</p>
+                <p><strong>Headers:</strong></p>
+                <pre>{{ JSON.stringify(item.headers, null, 2) }}</pre>
+                <p><strong>Body:</strong></p>
+                <pre>{{ JSON.stringify(item.body, null, 2) }}</pre>
+            </div>
         </div>
     </div>
     <p v-else>No data available.</p>
 </div>
 
 <script>
-    const { createApp, ref, onMounted, onUnmounted, watch } = Vue;
+    const { createApp, ref, onMounted, onUnmounted } = Vue;
 
     createApp({
         setup() {
@@ -82,16 +104,38 @@ SPDX-License-Identifier: Apache-2.0
             const error = ref(null);
             const requestKey = ref('');
             const isListening = ref(false);
+            const expandedItems = ref({});
             let intervalId = null;
 
             const fetchData = async () => {
                 if (!requestKey.value) return;
                 try {
                     const response = await axios.get(`/api/v1/requests/${requestKey.value}`);
-                    data.value = response.data;
+
+                    if (!Array.isArray(response.data)) {
+                        throw new Error("Invalid response format");
+                    }
+
+                    // Generate unique ID based on path, method, and time (if available)
+                    const newData = response.data.map((item, index) => {
+                        return {
+                            ...item,
+                            id: `${item.path}-${item.method}-${item.time}`,
+                            time: item.time
+                        };
+                    });
+
+                    // Preserve expand state
+                    newData.forEach(item => {
+                        if (!(item.id in expandedItems.value)) {
+                            expandedItems.value[item.id] = false;
+                        }
+                    });
+
+                    data.value = newData;
                     error.value = null;
                 } catch (err) {
-                    error.value = "Failed to fetch data.";
+                    error.value = err.message || "Failed to fetch data.";
                 }
             };
 
@@ -106,6 +150,10 @@ SPDX-License-Identifier: Apache-2.0
                     intervalId = setInterval(fetchData, 5000);
                     isListening.value = true;
                 }
+            };
+
+            const toggleExpand = (id) => {
+                expandedItems.value[id] = !expandedItems.value[id];
             };
 
             const updateURL = () => {
@@ -131,9 +179,11 @@ SPDX-License-Identifier: Apache-2.0
                 clearInterval(intervalId);
             });
 
-            return { data, error, requestKey, isListening, toggleListening, updateURL };
+            return { data, error, requestKey, isListening, expandedItems, toggleListening, updateURL, toggleExpand };
         }
     }).mount("#app");
 </script>
 </body>
 </html>
+
+
