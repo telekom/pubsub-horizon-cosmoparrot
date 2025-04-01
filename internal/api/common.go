@@ -10,8 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
-func createNewLogHandler() fiber.Handler {
-	return logger.New(logger.Config{
+func getLoggerConfig() logger.Config {
+	return logger.Config{
 		Format:   "${green}→ Request received:\n${reset}${time} | ${status} - ${method} ${path}\n${green}→ Request headers:${magenta}\n${custom_tag}${green}→ Request body:${cyan}\n${body}${reset}\n",
 		TimeZone: "UTC",
 		CustomTags: map[string]logger.LogFunc{
@@ -24,5 +24,9 @@ func createNewLogHandler() fiber.Handler {
 				return output.WriteString(str)
 			},
 		},
-	})
+	}
+}
+
+func createNewLogHandler() fiber.Handler {
+	return logger.New(getLoggerConfig())
 }

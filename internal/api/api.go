@@ -22,7 +22,10 @@ func init() {
 
 }
 
-func AddHandlers(f embed.FS) {
+func NewApp(f embed.FS) *fiber.App {
+	app := fiber.New()
+	app.Use(createNewLogHandler())
+
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
 	v1.Get("/requests", handleGetAllRequests)
@@ -34,8 +37,11 @@ func AddHandlers(f embed.FS) {
 		Root:       http.FS(f),
 		PathPrefix: "web",
 	}))
+
+	return app
 }
 
-func Listen() {
+func Listen(f embed.FS) {
+	app := NewApp(f)
 	log.Fatal(app.Listen(fmt.Sprintf(":%d", config.LoadedConfiguration.Port)))
 }

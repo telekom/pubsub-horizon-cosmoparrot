@@ -12,7 +12,7 @@ func IsBrowser(userAgent string) bool {
 
 	str := strings.ToLower(userAgent)
 	for _, keyword := range browserKeywords {
-		if strings.Contains(str, keyword) {
+		if strings.Contains(str, keyword) && !strings.Contains(str, "googlebot") {
 			return true
 		}
 	}

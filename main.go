@@ -14,6 +14,5 @@ import (
 var webDir embed.FS
 
 func main() {
-	api.AddHandlers(webDir)
-	api.Listen()
+	api.Listen(webDir)
 }
