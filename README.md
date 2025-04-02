@@ -69,6 +69,24 @@ Alternatively you can run the server in a container:
 ```bash
 docker run -p 8080:8080 cosmoparrot
 ```
+
+## Deployment
+
+For the deployment of Cosmoparrot you can use Kubernetes deployment `manifest/deployment.yaml` and adjust it to your
+needs, or you can use and customize the Heln chart located in `manifest/helm`.
+
+*Helm example:*
+```
+helm install cosmoparrot ./manifest/helm/cosmoparrot \
+  --namespace custom-namespace --create-namespace \
+  --set cosmoparrot.storeKeyRequestHeaders="{X-Request-ID,X-Correlation-ID}" \
+  --set image.repository=myregistry.com/cosmoparrot \
+  --set image.tag=latest \
+  --set ingress.enabled=true \
+  --set ingress.host=cosmoparrot.mycompany.com \
+  --set imagePullSecrets[0].name=my-pull-secret
+```
+
 ## Contributing
 
 We're committed to open source, so we welcome and encourage everyone to join its developer community and contribute, whether it's through code or feedback.  

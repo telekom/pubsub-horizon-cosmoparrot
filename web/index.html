@@ -1,0 +1,189 @@
+<!--
+Copyright 2024 Deutsche Telekom IT GmbH
+
+SPDX-License-Identifier: Apache-2.0
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Request Viewer</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f3f4f6;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .error {
+            color: red;
+        }
+        pre {
+            background: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        input, button {
+            padding: 10px;
+            margin-right: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        button {
+            background-color: #e20074;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background-color: #b0005c;
+        }
+        .entry {
+            background: #fff;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            cursor: pointer;
+        }
+        .entry-header {
+            font-weight: bold;
+            color: #e20074;
+        }
+        .entry-content {
+            display: none;
+        }
+        .expanded .entry-content {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div id="app" class="container">
+    <h2>API Request Data</h2>
+    <div>
+        <input v-model="requestKey" type="text" placeholder="Enter key" @input="updateURL">
+        <button @click="toggleListening">{{ isListening ? "Stop" : "Listen" }}</button>
+    </div>
+    <p v-if="error" class="error">{{ error }}</p>
+    <div v-if="data.length">
+        <div v-for="(item, index) in data" :key="item.id" class="entry"
+             :class="{ expanded: expandedItems[item.id] }"
+             @click="toggleExpand(item.id)">
+            <p class="entry-header">{{ item.method }} {{ item.path }}</p>
+            <p><strong>Time:</strong> {{ item.time }}</p>
+            <div class="entry-content">
+                <p><strong>Method: </strong>{{ item.method }}</p>
+                <p><strong>Headers:</strong></p>
+                <pre>{{ JSON.stringify(item.headers, null, 2) }}</pre>
+                <p><strong>Body:</strong></p>
+                <pre>{{ JSON.stringify(item.body, null, 2) }}</pre>
+            </div>
+        </div>
+    </div>
+    <p v-else>No data available.</p>
+</div>
+
+<script>
+    const { createApp, ref, onMounted, onUnmounted } = Vue;
+
+    createApp({
+        setup() {
+            const data = ref([]);
+            const error = ref(null);
+            const requestKey = ref('');
+            const isListening = ref(false);
+            const expandedItems = ref({});
+            let intervalId = null;
+
+            const fetchData = async () => {
+                if (!requestKey.value) return;
+                try {
+                    const response = await axios.get(`/api/v1/requests/${requestKey.value}`);
+
+                    if (!Array.isArray(response.data)) {
+                        throw new Error("Invalid response format");
+                    }
+
+                    // Generate unique ID based on path, method, and time (if available)
+                    const newData = response.data.map((item, index) => {
+                        return {
+                            ...item,
+                            id: `${item.path}-${item.method}-${item.time}`,
+                            time: item.time
+                        };
+                    });
+
+                    // Preserve expand state
+                    newData.forEach(item => {
+                        if (!(item.id in expandedItems.value)) {
+                            expandedItems.value[item.id] = false;
+                        }
+                    });
+
+                    data.value = newData;
+                    error.value = null;
+                } catch (err) {
+                    error.value = err.message || "Failed to fetch data.";
+                }
+            };
+
+            const toggleListening = () => {
+                if (!requestKey.value) return;
+
+                if (isListening.value) {
+                    clearInterval(intervalId);
+                    isListening.value = false;
+                } else {
+                    fetchData();
+                    intervalId = setInterval(fetchData, 5000);
+                    isListening.value = true;
+                }
+            };
+
+            const toggleExpand = (id) => {
+                expandedItems.value[id] = !expandedItems.value[id];
+            };
+
+            const updateURL = () => {
+                const url = new URL(window.location);
+                if (requestKey.value) {
+                    url.searchParams.set('key', requestKey.value);
+                } else {
+                    url.searchParams.delete('key');
+                }
+                window.history.replaceState({}, '', url);
+            };
+
+            onMounted(() => {
+                const urlParams = new URLSearchParams(window.location.search);
+                const keyFromURL = urlParams.get('key');
+                if (keyFromURL) {
+                    requestKey.value = keyFromURL;
+                    toggleListening();
+                }
+            });
+
+            onUnmounted(() => {
+                clearInterval(intervalId);
+            });
+
+            return { data, error, requestKey, isListening, expandedItems, toggleListening, updateURL, toggleExpand };
+        }
+    }).mount("#app");
+</script>
+</body>
+</html>
+
+

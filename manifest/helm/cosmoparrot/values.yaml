@@ -1,0 +1,41 @@
+# Copyright 2024 Deutsche Telekom IT GmbH
+#
+# SPDX-License-Identifier: Apache-2.0
+
+replicaCount: 1
+
+image:
+  repository: cosmoparrot
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  name: cosmoparrot
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: false
+  host: cosmoparrot.example.com
+  annotations:
+  tls:
+    enabled: false
+    secretName: cosmoparrot-tls
+
+resources:
+  limits:
+    cpu: "1"
+    memory: "512Mi"
+  requests:
+    cpu: "0.5"
+    memory: "256Mi"
+
+cosmoparrot:
+  storeKeyRequestHeaders: []
+  # Example:
+  # storeKeyRequestHeaders:
+  #   - X-Request-ID
+  #   - X-Correlation-ID
+
+# Add this section for pull secrets
+imagePullSecrets: []
