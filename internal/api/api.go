@@ -30,6 +30,7 @@ func NewApp(f embed.FS) *fiber.App {
 	v1 := api.Group("/v1")
 	v1.Get("/requests", handleGetAllRequests)
 	v1.Get("/requests/:key", handleGetRequestByKey)
+	v1.Get("/slowloris", handleGetSlowloris)
 
 	app.Use(handleAnyRequest)
 

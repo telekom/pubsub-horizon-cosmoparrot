@@ -19,10 +19,12 @@ func init() {
 }
 
 type configuration struct {
-	Port                      int      `mapstructure:"port"`
-	ResponseCode              int      `mapstructure:"responseCode"`
-	MethodResponseCodeMapping []string `mapstructure:"methodResponseCodeMapping"`
-	StoreKeyRequestHeaders    []string `mapstructure:"storeKeyRequestHeaders"`
+	Port                            int      `mapstructure:"port"`
+	ResponseCode                    int      `mapstructure:"responseCode"`
+	MethodResponseCodeMapping       []string `mapstructure:"methodResponseCodeMapping"`
+	StoreKeyRequestHeaders          []string `mapstructure:"storeKeyRequestHeaders"`
+	SlowlorisDefaultDurationSeconds int      `mapstructure:"slowlorisDefaultDurationSeconds"`
+	SlowlorisDefaultIntervalSeconds int      `mapstructure:"slowlorisDefaultIntervalSeconds"`
 }
 
 func setDefaults() {
@@ -30,6 +32,8 @@ func setDefaults() {
 	viper.SetDefault("responseCode", 200)
 	viper.SetDefault("methodResponseCodeMapping", []string{})
 	viper.SetDefault("storeKeyRequestHeaders", []string{"x-request-key"})
+	viper.SetDefault("slowlorisDefaultDurationSeconds", 15)
+	viper.SetDefault("slowlorisDefaultIntervalSeconds", 1)
 }
 
 func loadConfiguration() {
