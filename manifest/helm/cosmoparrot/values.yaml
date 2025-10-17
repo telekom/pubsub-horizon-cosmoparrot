@@ -17,6 +17,7 @@ service:
 ingress:
   enabled: false
   host: cosmoparrot.example.com
+  className:
   annotations:
   tls:
     enabled: false
