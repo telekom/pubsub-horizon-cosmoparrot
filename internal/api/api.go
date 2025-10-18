@@ -8,10 +8,11 @@ import (
 	"cosmoparrot/internal/config"
 	"embed"
 	"fmt"
+	"net/http"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
-	"net/http"
 )
 
 var app *fiber.App
@@ -42,6 +43,9 @@ func NewApp(f embed.FS) *fiber.App {
 }
 
 func Listen(f embed.FS) {
+	// Start background workers explicitly during real server startup.
+	StartBackgroundWorkers()
+
 	app := NewApp(f)
 	log.Fatal(app.Listen(fmt.Sprintf(":%d", config.LoadedConfiguration.Port)))
 }

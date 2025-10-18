@@ -56,6 +56,12 @@ Cosmoparrot supports configuration via environment variables and/or a configurat
 | responseCode                | COSMOPARROT_RESPONSECODE              | int    | 200     | Enforces a specific HTTP response code. Can be used to test different consumer behavior. |
 | methodResponseCodeMapping   | COSMOPARROT_METHODRESPONSECODEMAPPING | string | ""      | Control the HTTP response code per HTTP method, for example: "POST:401"                  |
 
+Additional behavior:
+
+- Query-parameter override: You can override the response code per-request using the `responseCode` query parameter. The server looks for query parameter names in a case-insensitive and tolerant way (for example `responseCode`, `response_code`, `RESPONSECODE`, `Response-Code` are all accepted). When present and valid (an integer between 100 and 599), the query parameter takes precedence over any configured method mapping or global default.
+
+- Method mapping fallback: If no valid `responseCode` query parameter is present, Cosmoparrot checks `methodResponseCodeMapping` for an entry matching the HTTP method (e.g. `GET:202`) and uses that value. If none match, the `responseCode` configuration value is used.
+
 ## Running Cosmoparrot
 ### Locally
 
@@ -69,6 +75,12 @@ Alternatively you can run the server in a container:
 ```bash
 docker run -p 8080:8080 cosmoparrot
 ```
+
+Notes about background workers:
+
+- Background workers (used for store-write batching and other background tasks) do not start automatically when you only construct the app via `NewApp()` in tests or other programmatic contexts. This keeps tests deterministic and avoids extra goroutines during unit runs.
+
+- When you run the real server (via `Listen()`), Cosmoparrot will explicitly call `StartBackgroundWorkers()` before listening. If you embed or run the app programmatically and need background workers, call `api.StartBackgroundWorkers()` once during startup.
 
 ## Deployment
 
