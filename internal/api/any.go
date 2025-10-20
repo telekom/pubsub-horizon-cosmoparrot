@@ -9,13 +9,14 @@ import (
 	"cosmoparrot/internal/config"
 	"cosmoparrot/internal/utils"
 	"encoding/json"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/log"
-	go_cache "github.com/patrickmn/go-cache"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
+	go_cache "github.com/patrickmn/go-cache"
 )
 
 func handleAnyRequest(c *fiber.Ctx) error {
@@ -76,10 +77,6 @@ func handleAnyRequest(c *fiber.Ctx) error {
 	return c.Status(getResponseCode(c)).JSON(reqData)
 }
 
-func handleStoreWrites() {
-
-}
-
 func extractStoreKey(c *fiber.Ctx) string {
 	list := config.LoadedConfiguration.StoreKeyRequestHeaders
 
@@ -115,6 +112,14 @@ func setResponseHeaders(c *fiber.Ctx) {
 }
 
 func getResponseCode(c *fiber.Ctx) int {
+	// Simple, case-sensitive query-parameter override. Only `responseCode` is accepted.
+	if rc := c.Query("responseCode"); rc != "" {
+		if code, err := strconv.Atoi(strings.TrimSpace(rc)); err == nil && code >= 100 && code <= 599 {
+			return code
+		}
+		// invalid override -> fallthrough to mapping/default
+	}
+
 	mapping := config.LoadedConfiguration.MethodResponseCodeMapping
 
 	for _, m := range mapping {
