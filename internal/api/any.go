@@ -12,11 +12,23 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	go_cache "github.com/patrickmn/go-cache"
+	"net/url"
 	"slices"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
+
+var storeWritesOnce sync.Once
+
+// StartBackgroundWorkers starts package background workers (idempotent).
+// Call this from your application startup when you want background workers
+// to run (e.g. before Listen). Tests that only construct the app can skip
+// calling this to avoid background activity.
+func StartBackgroundWorkers() {
+	handleStoreWrites()
+}
 
 func handleAnyRequest(c *fiber.Ctx) error {
 	userAgent := c.Get("User-Agent")
@@ -77,7 +89,22 @@ func handleAnyRequest(c *fiber.Ctx) error {
 }
 
 func handleStoreWrites() {
-
+	storeWritesOnce.Do(func() {
+		// Start a small background worker that can later be extended to flush
+		// pending store writes. Keep it non-blocking and test-friendly.
+		go func() {
+			log.Debug("store write worker started")
+			ticker := time.NewTicker(1 * time.Minute)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ticker.C:
+					// Placeholder: insert batching/flush logic here in the future.
+					log.Debug("store write worker tick")
+				}
+			}
+		}()
+	})
 }
 
 func extractStoreKey(c *fiber.Ctx) string {
@@ -115,6 +142,39 @@ func setResponseHeaders(c *fiber.Ctx) {
 }
 
 func getResponseCode(c *fiber.Ctx) int {
+	// Parse query string in a case-insensitive way to find any parameter that
+	// corresponds to responseCode (e.g. responseCode, responsecode, response_code)
+	qs := string(c.Request().URI().QueryString())
+	if qs != "" {
+		vals, err := url.ParseQuery(qs)
+		if err == nil {
+			for k, arr := range vals {
+				if len(arr) == 0 {
+					continue
+				}
+				lk := strings.ToLower(k)
+				// normalize common variants by removing non-alphanumeric characters
+				norm := strings.ReplaceAll(lk, "_", "")
+				norm = strings.ReplaceAll(norm, "-", "")
+				if norm == "responsecode" {
+					val := arr[0]
+					responseCode, err := strconv.Atoi(val)
+					if err != nil {
+						log.Errorf("invalid responseCode query parameter '%s': %v. Falling back to configured mapping/default: %d", val, err, config.LoadedConfiguration.ResponseCode)
+						break
+					}
+
+					if responseCode < 100 || responseCode > 599 {
+						log.Errorf("responseCode query parameter out of range (%d). Falling back to configured mapping/default: %d", responseCode, config.LoadedConfiguration.ResponseCode)
+						break
+					}
+
+					return responseCode
+				}
+			}
+		}
+	}
+
 	mapping := config.LoadedConfiguration.MethodResponseCodeMapping
 
 	for _, m := range mapping {
