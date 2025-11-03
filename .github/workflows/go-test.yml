@@ -1,4 +1,4 @@
-# Copyright 2024 Deutsche Telekom IT GmbH
+# Copyright 2025 Deutsche Telekom AG
 #
 # SPDX-License-Identifier: Apache-2.0
 
@@ -20,12 +20,12 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v6
         with:
-          go-version: 1.21
+          go-version: stable
 
       - name: Run go test
         run: go test -v ./...
