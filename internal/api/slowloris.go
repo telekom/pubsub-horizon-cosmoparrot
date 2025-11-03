@@ -6,8 +6,10 @@ package api
 import (
 	"bufio"
 	"cosmoparrot/internal/config"
-	"github.com/gofiber/fiber/v2"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/rs/zerolog/log"
 )
 
 func handleGetSlowloris(ctx *fiber.Ctx) error {
@@ -34,8 +36,19 @@ func handleGetSlowloris(ctx *fiber.Ctx) error {
 			if time.Since(start) > time.Duration(durationSec)*time.Second {
 				break
 			}
-			w.WriteByte('.')
-			w.Flush()
+
+			err := w.WriteByte('.')
+			if err != nil {
+				log.Error().Err(err).Msg("failed to write to slowloris buffer")
+				return
+			}
+
+			err = w.Flush()
+			if err != nil {
+				log.Error().Err(err).Msg("error flushing slowloris buffer")
+				return
+			}
+
 			time.Sleep(time.Duration(intervalSec) * time.Second)
 		}
 	})
