@@ -5,10 +5,11 @@ package api
 
 import (
 	"embed"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHandleGetAllRequests(t *testing.T) {
@@ -24,13 +25,16 @@ func TestHandleGetRequestByKey(t *testing.T) {
 	app := NewApp(embed.FS{})
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/requests/123", nil)
-	resp, _ := app.Test(req)
+	resp, err := app.Test(req)
 
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
 	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 
 	req = httptest.NewRequest(http.MethodGet, "/foobar", nil)
 	req.Header.Set("x-request-key", "123")
-	resp, _ = app.Test(req)
+	_, err = app.Test(req)
+	assert.NoError(t, err)
 
 	req = httptest.NewRequest(http.MethodGet, "/api/v1/requests/123", nil)
 	resp, _ = app.Test(req)

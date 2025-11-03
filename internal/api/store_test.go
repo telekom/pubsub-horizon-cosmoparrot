@@ -7,14 +7,15 @@ package api
 import (
 	"cosmoparrot/internal/cache"
 	"encoding/json"
-	"github.com/gofiber/fiber/v2"
-	c "github.com/patrickmn/go-cache"
-	"github.com/stretchr/testify/assert"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/gofiber/fiber/v2"
+	c "github.com/patrickmn/go-cache"
+	"github.com/stretchr/testify/assert"
 )
 
 func setupTestApp() *fiber.App {
@@ -39,7 +40,7 @@ func TestHandleGetAllRequestsx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
 	}
@@ -62,7 +63,7 @@ func TestHandleGetRequestByKeyx(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	respBytes, err := ioutil.ReadAll(resp.Body)
+	respBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
 	}
