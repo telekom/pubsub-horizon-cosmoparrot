@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
 	"github.com/gofiber/fiber/v2/middleware/filesystem"
+	"github.com/gofiber/fiber/v2/middleware/healthcheck"
 	"net/http"
 )
 
@@ -25,6 +26,7 @@ func init() {
 func NewApp(f embed.FS) *fiber.App {
 	app := fiber.New()
 	app.Use(createNewLogHandler())
+	app.Use(healthcheck.New())
 
 	api := app.Group("/api")
 	v1 := api.Group("/v1")
