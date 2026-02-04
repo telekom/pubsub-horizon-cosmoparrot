@@ -29,9 +29,9 @@ func TestEnvironmentVariableOverride(t *testing.T) {
 	setDefaults()
 
 	// Set environment variables
-	os.Setenv("COSMOPARROT_PORT", "9090")
-	os.Setenv("COSMOPARROT_RESPONSECODE", "500")
-	os.Setenv("COSMOPARROT_STOREKEYREQUESTHEADERS", "x-custom-header")
+	_ = os.Setenv("COSMOPARROT_PORT", "9090")
+	_ = os.Setenv("COSMOPARROT_RESPONSECODE", "500")
+	_ = os.Setenv("COSMOPARROT_STOREKEYREQUESTHEADERS", "x-custom-header")
 
 	// Reload configuration
 	loadConfiguration()
@@ -42,9 +42,9 @@ func TestEnvironmentVariableOverride(t *testing.T) {
 	assert.Equal(t, []string{"x-custom-header"}, LoadedConfiguration.StoreKeyRequestHeaders)
 
 	// Cleanup
-	os.Unsetenv("COSMOPARROT_PORT")
-	os.Unsetenv("COSMOPARROT_RESPONSECODE")
-	os.Unsetenv("COSMOPARROT_STOREKEYREQUESTHEADERS")
+	_ = os.Unsetenv("COSMOPARROT_PORT")
+	_ = os.Unsetenv("COSMOPARROT_RESPONSECODE")
+	_ = os.Unsetenv("COSMOPARROT_STOREKEYREQUESTHEADERS")
 }
 
 func TestConfigFileNotFound(t *testing.T) {

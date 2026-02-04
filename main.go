@@ -7,7 +7,6 @@ package main
 import (
 	"cosmoparrot/internal/api"
 	"embed"
-	_ "embed"
 )
 
 //go:embed web/*
