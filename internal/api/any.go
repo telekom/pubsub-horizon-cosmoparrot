@@ -74,6 +74,10 @@ func handleAnyRequest(c *fiber.Ctx) error {
 		cache.Current.Set(key, string(jsonData), go_cache.DefaultExpiration)
 	}
 
+	if delay := getResponseDelay(c); delay > 0 {
+		time.Sleep(delay)
+	}
+
 	return c.Status(getResponseCode(c)).JSON(reqData)
 }
 
@@ -140,4 +144,23 @@ func getResponseCode(c *fiber.Ctx) int {
 	}
 
 	return config.LoadedConfiguration.ResponseCode
+}
+
+const maxResponseDelayMs = 60000
+
+// getResponseDelay reads the optional "responseDelay" query parameter (milliseconds)
+// and returns the corresponding time.Duration. Returns 0 for missing, non-integer,
+// negative, or out-of-range (>60000 ms) values.
+func getResponseDelay(c *fiber.Ctx) time.Duration {
+	raw := c.Query("responseDelay")
+	if raw == "" {
+		return 0
+	}
+
+	ms, err := strconv.Atoi(strings.TrimSpace(raw))
+	if err != nil || ms < 0 || ms > maxResponseDelayMs {
+		return 0
+	}
+
+	return time.Duration(ms) * time.Millisecond
 }
