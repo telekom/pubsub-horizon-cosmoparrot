@@ -19,6 +19,8 @@ import (
 	go_cache "github.com/patrickmn/go-cache"
 )
 
+const maxResponseDelayMs = 60000
+
 func handleAnyRequest(c *fiber.Ctx) error {
 	userAgent := c.Get("User-Agent")
 	if c.Path() == "/" && utils.IsBrowser(userAgent) {
@@ -145,8 +147,6 @@ func getResponseCode(c *fiber.Ctx) int {
 
 	return config.LoadedConfiguration.ResponseCode
 }
-
-const maxResponseDelayMs = 60000
 
 // getResponseDelay reads the optional "responseDelay" query parameter (milliseconds)
 // and returns the corresponding time.Duration. Returns 0 for missing, non-integer,
