@@ -9,7 +9,7 @@ import (
 )
 
 func handleDevNull(c *fiber.Ctx) error {
-	// Body is already read by Fiber into c.Body(); we simply ignore it.
-	// No deserialization, no caching, no logging — just return the status code.
+	// With StreamRequestBody enabled, the body is never read into memory
+	// because we never call c.Body(). No deserialization, no caching, no logging.
 	return c.SendStatus(getResponseCode(c))
 }
