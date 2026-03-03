@@ -56,6 +56,26 @@ Cosmoparrot supports configuration via environment variables and/or a configurat
 | responseCode                | COSMOPARROT_RESPONSECODE              | int    | 200     | Enforces a specific HTTP response code. Can be used to test different consumer behavior. |
 | methodResponseCodeMapping   | COSMOPARROT_METHODRESPONSECODEMAPPING | string | ""      | Control the HTTP response code per HTTP method, for example: "POST:401"                  |
 
+## Endpoints
+
+### Echo (catch-all)
+Any request that does not match a specific route is handled by the echo handler. It mirrors the request back as a JSON response including path, method, headers, and body.
+
+### `/api/v1/devnull`
+A high-performance sink endpoint that accepts any HTTP method. It reads and discards the request payload without parsing, logging, or storing anything — making it safe for sustained high-throughput scenarios with no risk of OOM.
+
+- Returns the configured response code (default `200`).
+- Supports `?responseCode=<code>` query parameter to override the status code per request.
+
+### `/api/v1/requests`
+Returns all stored requests as JSON (requires store key headers to be configured).
+
+### `/api/v1/requests/:key`
+Returns stored requests for a specific key.
+
+### `/api/v1/slowloris`
+Simulates a [slowloris](https://en.wikipedia.org/wiki/Slowloris_(computer_security)) response by streaming data slowly. Supports `?duration=<seconds>` and `?interval=<seconds>` query parameters.
+
 ## Running Cosmoparrot
 ### Locally
 

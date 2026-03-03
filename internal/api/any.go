@@ -126,23 +126,8 @@ func getResponseCode(c *fiber.Ctx) int {
 		// invalid override -> fallthrough to mapping/default
 	}
 
-	mapping := config.LoadedConfiguration.MethodResponseCodeMapping
-
-	for _, m := range mapping {
-		s := strings.Split(m, ":")
-		if len(s) == 2 {
-			if strings.ToUpper(strings.TrimSpace(s[0])) == c.Method() {
-
-				responseCode, err := strconv.Atoi(s[1])
-				if err != nil {
-					log.Errorf("could not successfully parse method request code mapping configuration. Fallback to request code: %d", config.LoadedConfiguration.ResponseCode)
-
-					return config.LoadedConfiguration.ResponseCode
-				}
-
-				return responseCode
-			}
-		}
+	if code, ok := config.LoadedConfiguration.MethodResponseCodeMap[c.Method()]; ok {
+		return code
 	}
 
 	return config.LoadedConfiguration.ResponseCode

@@ -6,6 +6,7 @@ package config
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 
 	"github.com/rs/zerolog/log"
@@ -20,13 +21,14 @@ func init() {
 }
 
 type configuration struct {
-	Port                            int      `mapstructure:"port"`
-	ResponseCode                    int      `mapstructure:"responseCode"`
-	MethodResponseCodeMapping       []string `mapstructure:"methodResponseCodeMapping"`
-	ReadBufferSize                  int      `mapstructure:"readBufferSize"`
-	StoreKeyRequestHeaders          []string `mapstructure:"storeKeyRequestHeaders"`
-	SlowlorisDefaultDurationSeconds int      `mapstructure:"slowlorisDefaultDurationSeconds"`
-	SlowlorisDefaultIntervalSeconds int      `mapstructure:"slowlorisDefaultIntervalSeconds"`
+	Port                            int            `mapstructure:"port"`
+	ResponseCode                    int            `mapstructure:"responseCode"`
+	MethodResponseCodeMapping       []string       `mapstructure:"methodResponseCodeMapping"`
+	ReadBufferSize                  int            `mapstructure:"readBufferSize"`
+	StoreKeyRequestHeaders          []string       `mapstructure:"storeKeyRequestHeaders"`
+	SlowlorisDefaultDurationSeconds int            `mapstructure:"slowlorisDefaultDurationSeconds"`
+	SlowlorisDefaultIntervalSeconds int            `mapstructure:"slowlorisDefaultIntervalSeconds"`
+	MethodResponseCodeMap           map[string]int `mapstructure:"-"`
 }
 
 func setDefaults() {
@@ -58,5 +60,24 @@ func loadConfiguration() {
 
 	if err := viper.Unmarshal(&LoadedConfiguration); err != nil {
 		panic(err)
+	}
+
+	LoadedConfiguration.BuildMethodResponseCodeMap()
+}
+
+func (c *configuration) BuildMethodResponseCodeMap() {
+	c.MethodResponseCodeMap = make(map[string]int, len(c.MethodResponseCodeMapping))
+	for _, m := range c.MethodResponseCodeMapping {
+		parts := strings.SplitN(m, ":", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		method := strings.ToUpper(strings.TrimSpace(parts[0]))
+		code, err := strconv.Atoi(strings.TrimSpace(parts[1]))
+		if err != nil {
+			log.Warn().Msgf("ignoring invalid method response code mapping: %s", m)
+			continue
+		}
+		c.MethodResponseCodeMap[method] = code
 	}
 }

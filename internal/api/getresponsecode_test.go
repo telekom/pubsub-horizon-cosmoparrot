@@ -18,6 +18,7 @@ func TestGetResponseCode_QueryParamPrecedence(t *testing.T) {
 	// ensure default
 	config.LoadedConfiguration.ResponseCode = 201
 	config.LoadedConfiguration.MethodResponseCodeMapping = []string{"GET:202", "POST:203"}
+	config.LoadedConfiguration.BuildMethodResponseCodeMap()
 
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -33,6 +34,7 @@ func TestGetResponseCode_QueryParamPrecedence(t *testing.T) {
 func TestGetResponseCode_MappingFallback(t *testing.T) {
 	config.LoadedConfiguration.ResponseCode = 200
 	config.LoadedConfiguration.MethodResponseCodeMapping = []string{"GET:202", "POST:203"}
+	config.LoadedConfiguration.BuildMethodResponseCodeMap()
 
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -48,6 +50,7 @@ func TestGetResponseCode_MappingFallback(t *testing.T) {
 func TestGetResponseCode_InvalidQueryParamFallsback(t *testing.T) {
 	config.LoadedConfiguration.ResponseCode = 299
 	config.LoadedConfiguration.MethodResponseCodeMapping = []string{"GET:202"}
+	config.LoadedConfiguration.BuildMethodResponseCodeMap()
 
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -64,6 +67,7 @@ func TestGetResponseCode_InvalidQueryParamFallsback(t *testing.T) {
 func TestGetResponseCode_OutOfRangeQueryParamFallsback(t *testing.T) {
 	config.LoadedConfiguration.ResponseCode = 299
 	config.LoadedConfiguration.MethodResponseCodeMapping = []string{"GET:202"}
+	config.LoadedConfiguration.BuildMethodResponseCodeMap()
 
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {
@@ -81,6 +85,7 @@ func TestGetResponseCode_OutOfRangeQueryParamFallsback(t *testing.T) {
 func TestGetResponseCode_CaseInsensitiveVariants(t *testing.T) {
 	config.LoadedConfiguration.ResponseCode = 200
 	config.LoadedConfiguration.MethodResponseCodeMapping = []string{"GET:202"}
+	config.LoadedConfiguration.BuildMethodResponseCodeMap()
 
 	app := fiber.New()
 	app.Get("/test", func(c *fiber.Ctx) error {

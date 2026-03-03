@@ -33,6 +33,7 @@ func NewApp(f embed.FS) *fiber.App {
 	v1.Get("/requests", handleGetAllRequests)
 	v1.Get("/requests/:key", handleGetRequestByKey)
 	v1.Get("/slowloris", handleGetSlowloris)
+	v1.All("/devnull", handleDevNull)
 
 	app.Use(handleAnyRequest)
 
