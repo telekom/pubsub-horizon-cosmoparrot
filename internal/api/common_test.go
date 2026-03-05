@@ -6,11 +6,12 @@ package api
 
 import (
 	"bytes"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/logger"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -34,7 +35,9 @@ func TestLogFormat(t *testing.T) {
 
 	// Here we capture everything that is logged via our fiber middleware
 	c.Done = func(c *fiber.Ctx, logString []byte) {
-		w.Write(logString)
+		writtenBytes, err := w.Write(logString)
+		assert.NoError(t, err)
+		assert.Equal(t, len(logString), writtenBytes)
 	}
 
 	// Create a new Fiber app
