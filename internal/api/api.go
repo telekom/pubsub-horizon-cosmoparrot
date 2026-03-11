@@ -15,16 +15,10 @@ import (
 	"net/http"
 )
 
-var app *fiber.App
-
-func init() {
-	app = fiber.New()
-	app.Use(createNewLogHandler())
-
-}
-
 func NewApp(f embed.FS) *fiber.App {
-	app := fiber.New()
+	app := fiber.New(fiber.Config{
+		StreamRequestBody: true,
+	})
 	app.Use(createNewLogHandler())
 	app.Use(healthcheck.New())
 
@@ -33,6 +27,7 @@ func NewApp(f embed.FS) *fiber.App {
 	v1.Get("/requests", handleGetAllRequests)
 	v1.Get("/requests/:key", handleGetRequestByKey)
 	v1.Get("/slowloris", handleGetSlowloris)
+	v1.All("/devnull", handleDevNull)
 
 	app.Use(handleAnyRequest)
 
