@@ -39,3 +39,5 @@ cosmoparrot:
   #   - X-Correlation-ID
 
 imagePullSecrets: []
+
+podAnnotations: {}
