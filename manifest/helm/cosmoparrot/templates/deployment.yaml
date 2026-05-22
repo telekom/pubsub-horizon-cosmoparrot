@@ -76,3 +76,11 @@ spec:
             requests:
               cpu: "{{ .Values.resources.requests.cpu }}"
               memory: "{{ .Values.resources.requests.memory }}"
+      affinity:
+        {{- if .Values.affinity.nodeAffinity }}
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  {{- toYaml .Values.affinity.nodeAffinity | nindent 18 }}
+        {{- end }}
