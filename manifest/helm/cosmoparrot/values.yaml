@@ -32,6 +32,9 @@ resources:
     memory: "256Mi"
 
 cosmoparrot:
+  # Log every incoming request (line, headers and body).
+  # Set to false to disable per-request logging.
+  requestLogging: true
   storeKeyRequestHeaders: []
   # Example:
   # storeKeyRequestHeaders:

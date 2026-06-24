@@ -55,6 +55,7 @@ Cosmoparrot supports configuration via environment variables and/or a configurat
 | port                        | COSMOPARROT_PORT                      | int    | 8080    | Sets the port to listen on.                                                              |
 | responseCode                | COSMOPARROT_RESPONSECODE              | int    | 200     | Enforces a specific HTTP response code. Can be used to test different consumer behavior. |
 | methodResponseCodeMapping   | COSMOPARROT_METHODRESPONSECODEMAPPING | string | ""      | Control the HTTP response code per HTTP method, for example: "POST:401"                  |
+| requestLogging              | COSMOPARROT_REQUESTLOGGING            | bool   | true    | Logs every incoming request (line, headers and body). Set to `false` to disable per-request logging, e.g. for high-throughput scenarios. |
 
 ## Endpoints
 

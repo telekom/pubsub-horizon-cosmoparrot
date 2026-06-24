@@ -24,6 +24,7 @@ type configuration struct {
 	Port                            int            `mapstructure:"port"`
 	ResponseCode                    int            `mapstructure:"responseCode"`
 	MethodResponseCodeMapping       []string       `mapstructure:"methodResponseCodeMapping"`
+	RequestLogging                  bool           `mapstructure:"requestLogging"`
 	ReadBufferSize                  int            `mapstructure:"readBufferSize"`
 	StoreKeyRequestHeaders          []string       `mapstructure:"storeKeyRequestHeaders"`
 	SlowlorisDefaultDurationSeconds int            `mapstructure:"slowlorisDefaultDurationSeconds"`
@@ -35,6 +36,7 @@ func setDefaults() {
 	viper.SetDefault("port", 8080)
 	viper.SetDefault("responseCode", 200)
 	viper.SetDefault("methodResponseCodeMapping", []string{})
+	viper.SetDefault("requestLogging", true)
 	viper.SetDefault("readBufferSize", 4096)
 	viper.SetDefault("storeKeyRequestHeaders", []string{"x-request-key"})
 	viper.SetDefault("slowlorisDefaultDurationSeconds", 15)

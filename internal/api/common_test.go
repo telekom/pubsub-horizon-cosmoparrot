@@ -6,6 +6,7 @@ package api
 
 import (
 	"bytes"
+	"cosmoparrot/internal/config"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"net/http"
@@ -68,4 +69,35 @@ func TestLogFormat(t *testing.T) {
 	assert.Contains(t, logOutput, "200")
 	assert.Contains(t, logOutput, `"key": "value"`)
 	assert.Contains(t, logOutput, "X-Custom-Header: [TestValue]")
+}
+
+func TestRequestLoggingDisabled(t *testing.T) {
+	// Disable request logging and restore the original value afterwards
+	original := config.LoadedConfiguration.RequestLogging
+	config.LoadedConfiguration.RequestLogging = false
+	defer func() { config.LoadedConfiguration.RequestLogging = original }()
+
+	var w byteSliceWriter
+
+	c := getLoggerConfig()
+	c.DisableColors = true
+	c.Done = func(c *fiber.Ctx, logString []byte) {
+		w.Write(logString)
+	}
+
+	app := fiber.New()
+	app.Use(logger.New(c))
+	app.Post("/test", func(c *fiber.Ctx) error {
+		return c.SendString("Hello, Fiber!")
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/test", bytes.NewBufferString(`{"key": "value"}`))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(req, -1)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Nothing should have been logged when request logging is disabled
+	assert.Empty(t, w.b)
 }
