@@ -48,6 +48,19 @@ func TestHandleAnyRequest(t *testing.T) {
 	assert.Equal(t, cachedRequests[0].Body.(map[string]interface{})["message"], "test")
 }
 
+func TestHandleAnyRequest_MalformedBody(t *testing.T) {
+	app := fiber.New()
+	app.Use(handleAnyRequest)
+
+	r := httptest.NewRequest("POST", "/test", bytes.NewReader([]byte(`{not valid json`)))
+	r.Header.Set("Content-Type", "application/json")
+
+	resp, err := app.Test(r, -1)
+	assert.NoError(t, err)
+	// A malformed client body is a client error, not a server fault.
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
 func TestHandleAnyRequest_WithResponseDelay(t *testing.T) {
 	app := fiber.New()
 	app.Use(handleAnyRequest)

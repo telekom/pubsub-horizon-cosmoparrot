@@ -40,6 +40,8 @@ spec:
           env:
             - name: COSMOPARROT_PORT
               value: "{{ .Values.service.port }}"
+            - name: COSMOPARROT_REQUESTLOGGING
+              value: "{{ .Values.cosmoparrot.requestLogging }}"
             - name: COSMOPARROT_STOREKEYREQUESTHEADERS
               value: "{{ join "," .Values.cosmoparrot.storeKeyRequestHeaders }}"
           securityContext:

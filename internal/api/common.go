@@ -5,6 +5,7 @@
 package api
 
 import (
+	"cosmoparrot/internal/config"
 	"fmt"
 	"strings"
 
@@ -15,6 +16,10 @@ import (
 func getLoggerConfig() logger.Config {
 	return logger.Config{
 		Next: func(c *fiber.Ctx) bool {
+			// Skip logging entirely when request logging is disabled.
+			if !config.LoadedConfiguration.RequestLogging {
+				return true
+			}
 			return strings.HasPrefix(c.Path(), "/api/v1/devnull")
 		},
 		Format:   "${green}→ Request received:\n${reset}${time} | ${status} - ${method} ${path}\n${green}→ Request headers:${magenta}\n${custom_tag}${green}→ Request body:${cyan}\n${body}${reset}\n",

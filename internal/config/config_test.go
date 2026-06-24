@@ -20,7 +20,23 @@ func TestSetDefaults(t *testing.T) {
 	assert.Equal(t, 8080, viper.GetInt("port"))
 	assert.Equal(t, 200, viper.GetInt("responseCode"))
 	assert.Equal(t, []string{}, viper.GetStringSlice("methodResponseCodeMapping"))
+	assert.Equal(t, true, viper.GetBool("requestLogging"))
 	assert.Equal(t, []string{"x-request-key"}, viper.GetStringSlice("storeKeyRequestHeaders"))
+}
+
+func TestRequestLoggingEnvironmentOverride(t *testing.T) {
+	// Reset Viper to ensure clean state
+	viper.Reset()
+	setDefaults()
+
+	os.Setenv("COSMOPARROT_REQUESTLOGGING", "false")
+
+	loadConfiguration()
+
+	assert.Equal(t, false, LoadedConfiguration.RequestLogging)
+
+	// Cleanup
+	os.Unsetenv("COSMOPARROT_REQUESTLOGGING")
 }
 
 func TestEnvironmentVariableOverride(t *testing.T) {
