@@ -1,0 +1,31 @@
+# Copyright 2026 Deutsche Telekom AG
+# SPDX-FileCopyrightText: 2026 Deutsche Telekom AG
+#
+# SPDX-License-Identifier: Apache-2.0
+
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    uses: telekom/pubsub-horizon-ci/.github/workflows/go-test.yml@main
+    with:
+      test-flags: "-v"
+
+  reuse:
+    uses: telekom/pubsub-horizon-ci/.github/workflows/reuse-compliance.yml@main
+
+  publish:
+    if: github.event_name == 'push'
+    needs: [build]
+    uses: telekom/pubsub-horizon-ci/.github/workflows/docker-publish.yml@main
+    with:
+      component: cosmoparrot
+      language: go
+    secrets:
+      REGISTRY_USERNAME: ${{ secrets.ARTIFACTORY_O28M_PUSH_USER }}
+      REGISTRY_PASSWORD: ${{ secrets.ARTIFACTORY_O28M_PUSH_TOKEN }}
