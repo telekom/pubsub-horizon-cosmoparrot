@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/rs/zerolog/log"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/spf13/viper"
 )
 
@@ -21,6 +21,7 @@ func init() {
 }
 
 type configuration struct {
+	LogLevel                        string         `mapstructure:"logLevel"`
 	Port                            int            `mapstructure:"port"`
 	ResponseCode                    int            `mapstructure:"responseCode"`
 	MethodResponseCodeMapping       []string       `mapstructure:"methodResponseCodeMapping"`
@@ -33,6 +34,7 @@ type configuration struct {
 }
 
 func setDefaults() {
+	viper.SetDefault("logLevel", "info")
 	viper.SetDefault("port", 8080)
 	viper.SetDefault("responseCode", 200)
 	viper.SetDefault("methodResponseCodeMapping", []string{})
@@ -54,7 +56,7 @@ func loadConfiguration() {
 	if err := viper.ReadInConfig(); err != nil {
 		var configFileNotFoundError viper.ConfigFileNotFoundError
 		if errors.As(err, &configFileNotFoundError) {
-			log.Info().Msg("Configuration not found but environment variables will be taken into account.")
+			log.Info("configuration not found but environment variables will be taken into account.")
 		}
 	}
 
@@ -65,6 +67,7 @@ func loadConfiguration() {
 	}
 
 	LoadedConfiguration.BuildMethodResponseCodeMap()
+	log.SetLevel(parseLogLevel(LoadedConfiguration.LogLevel))
 }
 
 func (c *configuration) BuildMethodResponseCodeMap() {
@@ -77,9 +80,25 @@ func (c *configuration) BuildMethodResponseCodeMap() {
 		method := strings.ToUpper(strings.TrimSpace(parts[0]))
 		code, err := strconv.Atoi(strings.TrimSpace(parts[1]))
 		if err != nil {
-			log.Warn().Msgf("ignoring invalid method response code mapping: %s", m)
+			log.Warnf("ignoring invalid method response code mapping: %s", m)
 			continue
 		}
 		c.MethodResponseCodeMap[method] = code
+	}
+}
+
+func parseLogLevel(lvl string) log.Level {
+	switch strings.ToLower(lvl) {
+	case "debug":
+		return log.LevelDebug
+	case "info":
+		return log.LevelInfo
+	case "warn":
+		return log.LevelWarn
+	case "error":
+		return log.LevelError
+	default:
+		log.Warnf("invalid log-level '%s', falling back to info", lvl)
+		return log.LevelInfo
 	}
 }
