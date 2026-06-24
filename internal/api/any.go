@@ -34,7 +34,7 @@ func handleAnyRequest(c *fiber.Ctx) error {
 		if err != nil {
 			// A malformed body is a client error, not a server fault: respond 400
 			// and keep it at debug level so a flood of bad requests can't spam the logs.
-			log.Debugf("failed to deserialize request body, error: %s", err.Error())
+			log.Debugf("failed to deserialize request body, error: %v", err)
 			return c.SendStatus(fiber.StatusBadRequest)
 		}
 	}
