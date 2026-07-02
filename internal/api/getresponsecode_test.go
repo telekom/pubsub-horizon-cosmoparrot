@@ -81,7 +81,8 @@ func TestGetResponseCode_OutOfRangeQueryParamFallsback(t *testing.T) {
 	assert.Equal(t, 202, resp.StatusCode)
 }
 
-// New test: case-insensitive and variant recognition for responseCode
+// Case sensitivity should be ignored for query parameters
+// "-" and "_" should NOT be recognized
 func TestGetResponseCode_CaseInsensitiveVariants(t *testing.T) {
 	config.LoadedConfiguration.ResponseCode = 200
 	config.LoadedConfiguration.MethodResponseCodeMapping = []string{"GET:202"}
@@ -93,16 +94,17 @@ func TestGetResponseCode_CaseInsensitiveVariants(t *testing.T) {
 		return c.SendStatus(code)
 	})
 
-	// Non-exact variants should NOT be recognized anymore and therefore fall back to mapping (202).
 	cases := []struct {
 		url  string
 		want int
 	}{
 		{"/test?response_code=205", 202},
-		{"/test?RESPONSECODE=206", 202},
-		{"/test?Response-Code=207", 202},
+		{"/test?Response-Code=206", 202},
 		// exact match should still work
-		{"/test?responseCode=205", 205},
+		{"/test?responsecode=207", 207},
+		{"/test?rEspoNsecOde=208", 208},
+		{"/test?RESPONSECODE=209", 209},
+		{"/test?responseCode=210", 210},
 	}
 
 	for _, tc := range cases {
