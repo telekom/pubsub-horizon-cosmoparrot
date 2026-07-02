@@ -9,11 +9,12 @@ import (
 	"cosmoparrot/internal/config"
 	"cosmoparrot/internal/utils"
 	"encoding/json"
+	"math/rand"
 	"slices"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
-	"math/rand"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/log"
@@ -24,7 +25,7 @@ const maxResponseDelayMs = 60000
 const maxResponseSize = 10_000_000
 const maxResponseSizePaddingWindowSize = 4096 // How often the padding is shifted before wrapping around
 var paddingSource = newRandomString(maxResponseSize + maxResponseSizePaddingWindowSize)
-var paddingOffset int
+var paddingOffset atomic.Int64
 
 // newRandomString builds a random string
 func newRandomString(length int) string {
@@ -98,8 +99,8 @@ func handleAnyRequest(c *fiber.Ctx) error {
 	}
 
 	if size := getResponseSize(c); size > 0 {
-		paddingOffset = (paddingOffset + 1) % maxResponseSizePaddingWindowSize
-		reqData.Padding = paddingSource[paddingOffset : paddingOffset+size]
+		offset := int(paddingOffset.Add(1) % maxResponseSizePaddingWindowSize)
+		reqData.Padding = paddingSource[offset : offset+size]
 	}
 
 	return c.Status(getResponseCode(c)).JSON(reqData)

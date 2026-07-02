@@ -12,5 +12,5 @@ type request struct {
 	Method  string              `json:"method"`
 	Headers map[string][]string `json:"headers,omitempty"`
 	Body    any                 `json:"body,omitempty"`
-	Padding string              `json:"padding"`
+	Padding string              `json:"padding,omitempty"`
 }
