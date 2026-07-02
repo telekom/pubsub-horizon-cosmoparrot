@@ -8,132 +8,131 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetResponseDelay_ValidValue(t *testing.T) {
+func TestGetResponseSize_ValidValue(t *testing.T) {
 	app := fiber.New()
-	var result time.Duration
+	var result int
 	app.Get("/test", func(c *fiber.Ctx) error {
-		result = getResponseDelay(c)
+		result = getResponseSize(c)
 		return c.SendStatus(http.StatusOK)
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/test?responseDelay=500", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test?responseSize=500", nil)
 	resp, err := app.Test(req)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, 500*time.Millisecond, result)
+	assert.Equal(t, 500, result)
 }
 
-func TestGetResponseDelay_MissingParam(t *testing.T) {
+func TestGetResponseSize_MissingParam(t *testing.T) {
 	app := fiber.New()
-	var result time.Duration
+	var result int
 	app.Get("/test", func(c *fiber.Ctx) error {
-		result = getResponseDelay(c)
+		result = getResponseSize(c)
 		return c.SendStatus(http.StatusOK)
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/test", nil)
 	resp, _ := app.Test(req)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, time.Duration(0), result)
+	assert.Equal(t, 0, result)
 }
 
-func TestGetResponseDelay_NonInteger(t *testing.T) {
+func TestGetResponseSize_NonInteger(t *testing.T) {
 	app := fiber.New()
-	var result time.Duration
+	var result int
 	app.Get("/test", func(c *fiber.Ctx) error {
-		result = getResponseDelay(c)
+		result = getResponseSize(c)
 		return c.SendStatus(http.StatusOK)
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/test?responseDelay=abc", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test?responseSize=abc", nil)
 	resp, _ := app.Test(req)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, time.Duration(0), result)
+	assert.Equal(t, 0, result)
 }
 
-func TestGetResponseDelay_NegativeValue(t *testing.T) {
+func TestGetResponseSize_NegativeValue(t *testing.T) {
 	app := fiber.New()
-	var result time.Duration
+	var result int
 	app.Get("/test", func(c *fiber.Ctx) error {
-		result = getResponseDelay(c)
+		result = getResponseSize(c)
 		return c.SendStatus(http.StatusOK)
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/test?responseDelay=-100", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test?responseSize=-100", nil)
 	resp, _ := app.Test(req)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, time.Duration(0), result)
+	assert.Equal(t, 0, result)
 }
 
-func TestGetResponseDelay_ExceedsMax(t *testing.T) {
+func TestGetResponseSize_ExceedsMax(t *testing.T) {
 	app := fiber.New()
-	var result time.Duration
+	var result int
 	app.Get("/test", func(c *fiber.Ctx) error {
-		result = getResponseDelay(c)
+		result = getResponseSize(c)
 		return c.SendStatus(http.StatusOK)
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/test?responseDelay=60001", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test?responseSize=10000001", nil)
 	resp, _ := app.Test(req)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, time.Duration(0), result)
+	assert.Equal(t, 0, result)
 }
 
-func TestGetResponseDelay_BoundaryMax(t *testing.T) {
+func TestGetResponseSize_BoundaryMax(t *testing.T) {
 	app := fiber.New()
-	var result time.Duration
+	var result int
 	app.Get("/test", func(c *fiber.Ctx) error {
-		result = getResponseDelay(c)
+		result = getResponseSize(c)
 		return c.SendStatus(http.StatusOK)
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/test?responseDelay=60000", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test?responseSize=10000000", nil)
 	resp, _ := app.Test(req)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, 60*time.Second, result)
+	assert.Equal(t, maxResponseSize, result)
 }
 
-func TestGetResponseDelay_Zero(t *testing.T) {
+func TestGetResponseSize_Zero(t *testing.T) {
 	app := fiber.New()
-	var result time.Duration
+	var result int
 	app.Get("/test", func(c *fiber.Ctx) error {
-		result = getResponseDelay(c)
+		result = getResponseSize(c)
 		return c.SendStatus(http.StatusOK)
 	})
 
-	req := httptest.NewRequest(http.MethodGet, "/test?responseDelay=0", nil)
+	req := httptest.NewRequest(http.MethodGet, "/test?responseSize=0", nil)
 	resp, _ := app.Test(req)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, time.Duration(0), result)
+	assert.Equal(t, 0, result)
 }
 
 // Case sensitivity should be ignored for query parameters
 // "-" and "_" should NOT be recognized
-func TestGetResponseDelay_CaseInsensitiveVariants(t *testing.T) {
+func TestGetResponseSize_CaseInsensitiveVariants(t *testing.T) {
 	app := fiber.New()
-	var result time.Duration
+	var result int
 	app.Get("/test", func(c *fiber.Ctx) error {
-		result = getResponseDelay(c)
+		result = getResponseSize(c)
 		return c.SendStatus(http.StatusOK)
 	})
 
 	cases := []struct {
 		url  string
-		want time.Duration
+		want int
 	}{
-		{"/test?response_delay=500", 0},
-		{"/test?Response-Delay=500", 0},
+		{"/test?response_size=500", 0},
+		{"/test?Response-Size=500", 0},
 		// exact match should work
-		{"/test?responsedelay=500", 500 * time.Millisecond},
-		{"/test?reSpoNseDelay=500", 500 * time.Millisecond},
-		{"/test?RESPONSEDELAY=500", 500 * time.Millisecond},
-		{"/test?responseDelay=500", 500 * time.Millisecond},
+		{"/test?reSpoNsesIze=500", 500},
+		{"/test?responsesize=500", 500},
+		{"/test?RESPONSESIZE=500", 500},
+		{"/test?responseSize=500", 500},
 	}
 
 	for _, tc := range cases {
