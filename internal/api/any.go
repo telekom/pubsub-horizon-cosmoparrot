@@ -94,6 +94,12 @@ func handleAnyRequest(c *fiber.Ctx) error {
 		cache.Current.Set(key, string(jsonData), go_cache.DefaultExpiration)
 	}
 
+	// suppress the echoed request body if the client opted out; the stored
+	// copy above intentionally keeps the full body for later inspection.
+	if !getMirrorBody(c) {
+		reqData.Body = nil
+	}
+
 	if delay := getResponseDelay(c); delay > 0 {
 		time.Sleep(delay)
 	}
@@ -149,6 +155,24 @@ func queryCaseInsensitive(c *fiber.Ctx, key string) string {
 		}
 	}
 	return ""
+}
+
+// getMirrorBody reads the optional "mirrorBody" query parameter. Body mirroring
+// is enabled by default; it is only disabled when the parameter is explicitly set
+// to a false-y value ("false", "0", "f"). Missing or unparsable values keep the
+// default (true), so the request body is echoed back in the response body.
+func getMirrorBody(c *fiber.Ctx) bool {
+	raw := queryCaseInsensitive(c, "mirrorBody")
+	if raw == "" {
+		return true
+	}
+
+	enabled, err := strconv.ParseBool(strings.TrimSpace(raw))
+	if err != nil {
+		return true
+	}
+
+	return enabled
 }
 
 func getResponseCode(c *fiber.Ctx) int {
