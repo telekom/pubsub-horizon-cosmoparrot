@@ -9,9 +9,11 @@ import (
 	"cosmoparrot/internal/config"
 	"cosmoparrot/internal/utils"
 	"encoding/json"
+	"math/rand"
 	"slices"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -20,6 +22,20 @@ import (
 )
 
 const maxResponseDelayMs = 60000
+const maxResponseSize = 10_000_000
+const maxResponseSizePaddingWindowSize = 4096 // How often the padding is shifted before wrapping around
+var paddingSource = newRandomString(maxResponseSize + maxResponseSizePaddingWindowSize)
+var paddingOffset atomic.Int64
+
+// newRandomString builds a random string
+func newRandomString(length int) string {
+	const characters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	b := make([]byte, length)
+	for i := range b {
+		b[i] = characters[rand.Intn(len(characters))]
+	}
+	return string(b)
+}
 
 func handleAnyRequest(c *fiber.Ctx) error {
 	userAgent := c.Get("User-Agent")
@@ -82,6 +98,11 @@ func handleAnyRequest(c *fiber.Ctx) error {
 		time.Sleep(delay)
 	}
 
+	if size := getResponseSize(c); size > 0 {
+		offset := int(paddingOffset.Add(1) % maxResponseSizePaddingWindowSize)
+		reqData.Padding = paddingSource[offset : offset+size]
+	}
+
 	return c.Status(getResponseCode(c)).JSON(reqData)
 }
 
@@ -119,9 +140,19 @@ func setResponseHeaders(c *fiber.Ctx) {
 	c.Set("Current-Control", "max-age=0, must-revalidate")
 }
 
+// queryCaseInsensitive returns the value of the query parameter whose name
+// matches key case-insensitively, or "" if none is present.
+func queryCaseInsensitive(c *fiber.Ctx, key string) string {
+	for k, v := range c.Queries() {
+		if strings.EqualFold(k, key) {
+			return v
+		}
+	}
+	return ""
+}
+
 func getResponseCode(c *fiber.Ctx) int {
-	// Simple, case-sensitive query-parameter override. Only `responseCode` is accepted.
-	if rc := c.Query("responseCode"); rc != "" {
+	if rc := queryCaseInsensitive(c, "responseCode"); rc != "" {
 		if code, err := strconv.Atoi(strings.TrimSpace(rc)); err == nil && code >= 100 && code <= 599 {
 			return code
 		}
@@ -139,7 +170,7 @@ func getResponseCode(c *fiber.Ctx) int {
 // and returns the corresponding time.Duration. Returns 0 for missing, non-integer,
 // negative, or out-of-range (>60000 ms) values.
 func getResponseDelay(c *fiber.Ctx) time.Duration {
-	raw := c.Query("responseDelay")
+	raw := queryCaseInsensitive(c, "responseDelay")
 	if raw == "" {
 		return 0
 	}
@@ -150,4 +181,21 @@ func getResponseDelay(c *fiber.Ctx) time.Duration {
 	}
 
 	return time.Duration(ms) * time.Millisecond
+}
+
+// getResponseSize reads the optional "responseSize" query parameter (bytes)
+// and returns the corresponding integer. Returns 0 for missing, non-integer,
+// negative, or out-of-range (> 100 MB) values.
+func getResponseSize(c *fiber.Ctx) int {
+	raw := queryCaseInsensitive(c, "responseSize")
+	if raw == "" {
+		return 0
+	}
+
+	ms, err := strconv.Atoi(strings.TrimSpace(raw))
+	if err != nil || ms < 0 || ms > maxResponseSize {
+		return 0
+	}
+
+	return ms
 }
