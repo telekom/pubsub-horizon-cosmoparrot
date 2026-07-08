@@ -43,14 +43,17 @@ func handleAnyRequest(c *fiber.Ctx) error {
 		return c.Next()
 	}
 
+	// The request body is only read when it is echoed back.
 	var responseBody json.RawMessage
 
-	if body := c.Body(); len(body) > 0 {
-		if !json.Valid(body) {
-			log.Debug("failed to deserialize request body: invalid JSON")
-			return c.SendStatus(fiber.StatusBadRequest)
+	if getMirrorBody(c) {
+		if body := c.Body(); len(body) > 0 {
+			if !json.Valid(body) {
+				log.Debug("failed to deserialize request body: invalid JSON")
+				return c.SendStatus(fiber.StatusBadRequest)
+			}
+			responseBody = body
 		}
-		responseBody = body
 	}
 
 	setResponseHeaders(c)
@@ -90,12 +93,6 @@ func handleAnyRequest(c *fiber.Ctx) error {
 
 		// write to store
 		cache.Current.Set(key, string(jsonData), go_cache.DefaultExpiration)
-	}
-
-	// suppress the echoed request body if the client opted out; the stored
-	// copy above intentionally keeps the full body for later inspection.
-	if !getMirrorBody(c) {
-		reqData.Body = nil
 	}
 
 	if delay := getResponseDelay(c); delay > 0 {

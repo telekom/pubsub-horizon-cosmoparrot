@@ -72,12 +72,13 @@ func TestHandleAnyRequest_MirrorBodyDisabled(t *testing.T) {
 	_, hasBody := responseData["body"]
 	assert.False(t, hasBody, "response body should be omitted when mirrorBody=false")
 
-	// the stored copy still keeps the full request body
+	// the request is recorded without its body when mirroring is disabled
 	var cachedRequests []*request
 	jsonStr, _ := cache.Current.Get("no-mirror-key")
 	err = json.Unmarshal([]byte(jsonStr.(string)), &cachedRequests)
 	assert.NoError(t, err)
-	assert.JSONEq(t, `{"message": "test"}`, string(cachedRequests[0].Body))
+	assert.Equal(t, "/test", cachedRequests[0].Path)
+	assert.Nil(t, cachedRequests[0].Body)
 }
 
 func TestHandleAnyRequest_MalformedBody(t *testing.T) {

@@ -68,7 +68,12 @@ Cosmoparrot supports configuration via environment variables and/or a configurat
 ### Echo (catch-all)
 Any request that does not match a specific route is handled by the echo handler. It mirrors the request back as a JSON response including path, method, headers, and body.
 
-- Supports `?mirrorBody=false` to suppress echoing the request body back in the response body (defaults to `true`). The request body is still parsed and stored if a store key header is configured.
+- Supports `?mirrorBody=false` to suppress echoing the request body back in the response body (defaults to `true`). When disabled, the request body is not read at all — it is neither echoed nor stored, and is not validated (no `400` on malformed JSON). This keeps large payloads off-heap.
+
+### Request store
+The echo handler can record incoming requests in an in-memory cache so they can be retrieved later via `/api/v1/requests` and `/api/v1/requests/:key` (useful for asserting, in tests, what a component sent). A request is stored only when it carries one of the headers listed in `storeKeyRequestHeaders`, keyed by that header's value; entries expire after 1 hour.
+
+> **The store is disabled when `storeKeyRequestHeaders` is empty** (the Helm default) — no separate toggle is needed. Avoid configuring a header that is unique per request (e.g. a trace id such as `X-B3-Traceid`): every request then creates its own entry and the cache grows unbounded until it OOMs. Use a coarse key (or leave it empty) for high-throughput/load scenarios.
 
 ### `/api/v1/devnull`
 A high-performance sink endpoint that accepts any HTTP method. It reads and discards the request payload without parsing, logging, or storing anything — making it safe for sustained high-throughput scenarios with no risk of OOM.
