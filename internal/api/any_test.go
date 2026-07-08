@@ -94,6 +94,29 @@ func TestHandleAnyRequest_MalformedBody(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
 
+func TestHandleAnyRequest_DrainsStreamedBodyWhenNotMirroring(t *testing.T) {
+	app := fiber.New(fiber.Config{StreamRequestBody: true})
+	app.Use(handleAnyRequest)
+
+	// A large body forces fasthttp to expose it as a stream; with
+	// mirrorBody=false the handler must drain it so the request still
+	// completes cleanly instead of leaving the body unread.
+	largeBody := bytes.Repeat([]byte("a"), 5*1024*1024)
+	r := httptest.NewRequest("POST", "/test?mirrorBody=false", bytes.NewReader(largeBody))
+	r.Header.Set("Content-Type", "application/octet-stream")
+
+	resp, err := app.Test(r, -1)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var responseData map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, "/test", responseData["path"])
+	_, hasBody := responseData["body"]
+	assert.False(t, hasBody)
+}
+
 func TestHandleAnyRequest_WithResponseDelay(t *testing.T) {
 	app := fiber.New()
 	app.Use(handleAnyRequest)

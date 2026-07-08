@@ -9,6 +9,7 @@ import (
 	"cosmoparrot/internal/config"
 	"cosmoparrot/internal/utils"
 	"encoding/json"
+	"io"
 	"math/rand"
 	"slices"
 	"strconv"
@@ -54,6 +55,9 @@ func handleAnyRequest(c *fiber.Ctx) error {
 			}
 			responseBody = body
 		}
+	} else if stream := c.Context().RequestBodyStream(); stream != nil {
+		// drain the streamed body so the connection can be reused
+		_, _ = io.Copy(io.Discard, stream)
 	}
 
 	setResponseHeaders(c)
