@@ -62,6 +62,8 @@ Cosmoparrot supports configuration via environment variables and/or a configurat
 ### Echo (catch-all)
 Any request that does not match a specific route is handled by the echo handler. It mirrors the request back as a JSON response including path, method, headers, and body.
 
+- Supports `?mirrorBody=false` to suppress echoing the request body back in the response body (defaults to `true`). The request body is still parsed and stored if a store key header is configured.
+
 ### `/api/v1/devnull`
 A high-performance sink endpoint that accepts any HTTP method. It reads and discards the request payload without parsing, logging, or storing anything — making it safe for sustained high-throughput scenarios with no risk of OOM.
 
