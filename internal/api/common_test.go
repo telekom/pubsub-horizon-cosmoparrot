@@ -67,7 +67,8 @@ func TestLogFormat(t *testing.T) {
 	assert.Contains(t, logOutput, "→ Request received:")
 	assert.Contains(t, logOutput, "POST /test")
 	assert.Contains(t, logOutput, "200")
-	assert.Contains(t, logOutput, `"key": "value"`)
+	// The request body must not be logged.
+	assert.NotContains(t, logOutput, `"key": "value"`)
 	assert.Contains(t, logOutput, "X-Custom-Header: [TestValue]")
 }
 

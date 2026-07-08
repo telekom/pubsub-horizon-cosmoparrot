@@ -55,7 +55,13 @@ Cosmoparrot supports configuration via environment variables and/or a configurat
 | port                        | COSMOPARROT_PORT                      | int    | 8080    | Sets the port to listen on.                                                              |
 | responseCode                | COSMOPARROT_RESPONSECODE              | int    | 200     | Enforces a specific HTTP response code. Can be used to test different consumer behavior. |
 | methodResponseCodeMapping   | COSMOPARROT_METHODRESPONSECODEMAPPING | string | ""      | Control the HTTP response code per HTTP method, for example: "POST:401"                  |
-| requestLogging              | COSMOPARROT_REQUESTLOGGING            | bool   | true    | Logs every incoming request (line, headers and body). Set to `false` to disable per-request logging, e.g. for high-throughput scenarios. |
+| requestLogging              | COSMOPARROT_REQUESTLOGGING            | bool   | true    | Logs every incoming request (request line and headers). Set to `false` to disable per-request logging, e.g. for high-throughput scenarios. Request bodies are never logged. |
+
+> **Memory (GOMEMLIMIT):** On startup Cosmoparrot detects the container's cgroup
+> memory limit and sets a Go soft memory limit (`GOMEMLIMIT`) at 90% of it. This
+> makes the garbage collector run more aggressively as memory fills up, which
+> prevents the pod from being OOM-killed under bursty load. Set the `GOMEMLIMIT`
+> environment variable explicitly to override the auto-detected value.
 
 ## Endpoints
 

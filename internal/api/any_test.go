@@ -37,6 +37,8 @@ func TestHandleAnyRequest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "/test", responseData["path"])
 	assert.Equal(t, "POST", responseData["method"])
+	// the request body is mirrored verbatim into the response body
+	assert.Equal(t, map[string]interface{}{"message": "test"}, responseData["body"])
 
 	var cachedRequests []*request
 	jsonStr, _ := cache.Current.Get("test-key")
@@ -45,7 +47,7 @@ func TestHandleAnyRequest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, cachedRequests[0].Path, "/test")
 	assert.Equal(t, cachedRequests[0].Method, "POST")
-	assert.Equal(t, cachedRequests[0].Body.(map[string]interface{})["message"], "test")
+	assert.JSONEq(t, `{"message": "test"}`, string(cachedRequests[0].Body))
 }
 
 func TestHandleAnyRequest_MirrorBodyDisabled(t *testing.T) {
@@ -75,7 +77,7 @@ func TestHandleAnyRequest_MirrorBodyDisabled(t *testing.T) {
 	jsonStr, _ := cache.Current.Get("no-mirror-key")
 	err = json.Unmarshal([]byte(jsonStr.(string)), &cachedRequests)
 	assert.NoError(t, err)
-	assert.Equal(t, cachedRequests[0].Body.(map[string]interface{})["message"], "test")
+	assert.JSONEq(t, `{"message": "test"}`, string(cachedRequests[0].Body))
 }
 
 func TestHandleAnyRequest_MalformedBody(t *testing.T) {
