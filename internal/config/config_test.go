@@ -22,6 +22,8 @@ func TestSetDefaults(t *testing.T) {
 	assert.Equal(t, []string{}, viper.GetStringSlice("methodResponseCodeMapping"))
 	assert.Equal(t, true, viper.GetBool("requestLogging"))
 	assert.Equal(t, []string{"x-request-key"}, viper.GetStringSlice("storeKeyRequestHeaders"))
+	assert.Equal(t, false, viper.GetBool("otelEnabled"))
+	assert.Equal(t, "cosmoparrot", viper.GetString("otelServiceName"))
 }
 
 func TestRequestLoggingEnvironmentOverride(t *testing.T) {
@@ -48,6 +50,8 @@ func TestEnvironmentVariableOverride(t *testing.T) {
 	os.Setenv("COSMOPARROT_PORT", "9090")
 	os.Setenv("COSMOPARROT_RESPONSECODE", "500")
 	os.Setenv("COSMOPARROT_STOREKEYREQUESTHEADERS", "x-custom-header")
+	os.Setenv("COSMOPARROT_OTELENABLED", "true")
+	os.Setenv("COSMOPARROT_OTELSERVICENAME", "cosmoparrot-tests")
 
 	// Reload configuration
 	loadConfiguration()
@@ -56,11 +60,15 @@ func TestEnvironmentVariableOverride(t *testing.T) {
 	assert.Equal(t, 9090, LoadedConfiguration.Port)
 	assert.Equal(t, 500, LoadedConfiguration.ResponseCode)
 	assert.Equal(t, []string{"x-custom-header"}, LoadedConfiguration.StoreKeyRequestHeaders)
+	assert.Equal(t, true, LoadedConfiguration.OTelEnabled)
+	assert.Equal(t, "cosmoparrot-tests", LoadedConfiguration.OTelServiceName)
 
 	// Cleanup
 	os.Unsetenv("COSMOPARROT_PORT")
 	os.Unsetenv("COSMOPARROT_RESPONSECODE")
 	os.Unsetenv("COSMOPARROT_STOREKEYREQUESTHEADERS")
+	os.Unsetenv("COSMOPARROT_OTELENABLED")
+	os.Unsetenv("COSMOPARROT_OTELSERVICENAME")
 }
 
 func TestConfigFileNotFound(t *testing.T) {

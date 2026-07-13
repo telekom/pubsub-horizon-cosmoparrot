@@ -44,6 +44,16 @@ spec:
               value: "{{ .Values.cosmoparrot.requestLogging }}"
             - name: COSMOPARROT_STOREKEYREQUESTHEADERS
               value: "{{ join "," .Values.cosmoparrot.storeKeyRequestHeaders }}"
+            - name: COSMOPARROT_OTELENABLED
+              value: "{{ .Values.cosmoparrot.otel.enabled }}"
+            - name: COSMOPARROT_OTELSERVICENAME
+              value: "{{ .Values.cosmoparrot.otel.serviceName }}"
+            {{- range $name, $value := .Values.cosmoparrot.otel.env }}
+            {{- if $value }}
+            - name: {{ $name }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
           securityContext:
             runAsNonRoot: true
             runAsUser: 1000
