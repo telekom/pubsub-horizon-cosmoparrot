@@ -27,6 +27,8 @@ type configuration struct {
 	MethodResponseCodeMapping       []string       `mapstructure:"methodResponseCodeMapping"`
 	RequestLogging                  bool           `mapstructure:"requestLogging"`
 	ReadBufferSize                  int            `mapstructure:"readBufferSize"`
+	OTelEnabled                     bool           `mapstructure:"otelEnabled"`
+	OTelServiceName                 string         `mapstructure:"otelServiceName"`
 	StoreKeyRequestHeaders          []string       `mapstructure:"storeKeyRequestHeaders"`
 	SlowlorisDefaultDurationSeconds int            `mapstructure:"slowlorisDefaultDurationSeconds"`
 	SlowlorisDefaultIntervalSeconds int            `mapstructure:"slowlorisDefaultIntervalSeconds"`
@@ -41,6 +43,8 @@ func setDefaults() {
 	viper.SetDefault("requestLogging", true)
 	viper.SetDefault("readBufferSize", 4096)
 	viper.SetDefault("storeKeyRequestHeaders", []string{"x-request-key"})
+	viper.SetDefault("otelEnabled", false)
+	viper.SetDefault("otelServiceName", "cosmoparrot")
 	viper.SetDefault("slowlorisDefaultDurationSeconds", 15)
 	viper.SetDefault("slowlorisDefaultIntervalSeconds", 1)
 }
