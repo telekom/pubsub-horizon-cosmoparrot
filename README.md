@@ -55,20 +55,29 @@ Cosmoparrot supports configuration via environment variables and/or a configurat
 | port                        | COSMOPARROT_PORT                      | int    | 8080    | Sets the port to listen on.                                                              |
 | responseCode                | COSMOPARROT_RESPONSECODE              | int    | 200     | Enforces a specific HTTP response code. Can be used to test different consumer behavior. |
 | methodResponseCodeMapping   | COSMOPARROT_METHODRESPONSECODEMAPPING | string | ""      | Control the HTTP response code per HTTP method, for example: "POST:401"                  |
-| requestLogging              | COSMOPARROT_REQUESTLOGGING            | bool   | true    | Logs every incoming request (line, headers and body). Set to `false` to disable per-request logging, e.g. for high-throughput scenarios. |
 | otelEnabled                 | COSMOPARROT_OTELENABLED               | bool   | false   | Enables OpenTelemetry tracing for incoming HTTP requests.                               |
 | otelServiceName             | COSMOPARROT_OTELSERVICENAME           | string | cosmoparrot | Service name reported in traces.                                                     |
-
+| requestLogging              | COSMOPARROT_REQUESTLOGGING            | bool   | true    | Logs every incoming request (request line and headers). Set to `false` to disable per-request logging, e.g. for high-throughput scenarios. Request bodies are never logged. |
 
 When tracing is enabled, exporter behavior can be configured via standard OpenTelemetry environment variables like `OTEL_EXPORTER_OTLP_ENDPOINT`, `OTEL_EXPORTER_OTLP_TRACES_ENDPOINT`, `OTEL_EXPORTER_OTLP_HEADERS`, and `OTEL_EXPORTER_OTLP_PROTOCOL`.
 
+> **Memory (GOMEMLIMIT):** On startup Cosmoparrot detects the container's cgroup
+> memory limit and sets a Go soft memory limit (`GOMEMLIMIT`) at 90% of it. This
+> makes the garbage collector run more aggressively as memory fills up, which
+> prevents the pod from being OOM-killed under bursty load. Set the `GOMEMLIMIT`
+> environment variable explicitly to override the auto-detected value.
 
 ## Endpoints
 
 ### Echo (catch-all)
 Any request that does not match a specific route is handled by the echo handler. It mirrors the request back as a JSON response including path, method, headers, and body.
 
-- Supports `?mirrorBody=false` to suppress echoing the request body back in the response body (defaults to `true`). The request body is still parsed and stored if a store key header is configured.
+- Supports `?mirrorBody=false` to suppress echoing the request body back in the response body (defaults to `true`). When disabled, the request body is not read at all — it is neither echoed nor stored, and is not validated (no `400` on malformed JSON). This keeps large payloads off-heap.
+
+### Request store
+The echo handler can record incoming requests in an in-memory cache so they can be retrieved later via `/api/v1/requests` and `/api/v1/requests/:key` (useful for asserting, in tests, what a component sent). A request is stored only when it carries one of the headers listed in `storeKeyRequestHeaders`, keyed by that header's value; entries expire after 1 hour.
+
+> **The store is disabled when `storeKeyRequestHeaders` is empty** (the Helm default) — no separate toggle is needed. Avoid configuring a header that is unique per request (e.g. a trace id such as `X-B3-Traceid`): every request then creates its own entry and the cache grows unbounded until it OOMs. Use a coarse key (or leave it empty) for high-throughput/load scenarios.
 
 ### `/api/v1/devnull`
 A high-performance sink endpoint that accepts any HTTP method. It reads and discards the request payload without parsing, logging, or storing anything — making it safe for sustained high-throughput scenarios with no risk of OOM.

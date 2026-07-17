@@ -37,6 +37,8 @@ func TestHandleAnyRequest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "/test", responseData["path"])
 	assert.Equal(t, "POST", responseData["method"])
+	// the request body is mirrored verbatim into the response body
+	assert.Equal(t, map[string]interface{}{"message": "test"}, responseData["body"])
 
 	var cachedRequests []*request
 	jsonStr, _ := cache.Current.Get("test-key")
@@ -45,7 +47,7 @@ func TestHandleAnyRequest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, cachedRequests[0].Path, "/test")
 	assert.Equal(t, cachedRequests[0].Method, "POST")
-	assert.Equal(t, cachedRequests[0].Body.(map[string]interface{})["message"], "test")
+	assert.JSONEq(t, `{"message": "test"}`, string(cachedRequests[0].Body))
 }
 
 func TestHandleAnyRequest_MirrorBodyDisabled(t *testing.T) {
@@ -70,12 +72,13 @@ func TestHandleAnyRequest_MirrorBodyDisabled(t *testing.T) {
 	_, hasBody := responseData["body"]
 	assert.False(t, hasBody, "response body should be omitted when mirrorBody=false")
 
-	// the stored copy still keeps the full request body
+	// the request is recorded without its body when mirroring is disabled
 	var cachedRequests []*request
 	jsonStr, _ := cache.Current.Get("no-mirror-key")
 	err = json.Unmarshal([]byte(jsonStr.(string)), &cachedRequests)
 	assert.NoError(t, err)
-	assert.Equal(t, cachedRequests[0].Body.(map[string]interface{})["message"], "test")
+	assert.Equal(t, "/test", cachedRequests[0].Path)
+	assert.Nil(t, cachedRequests[0].Body)
 }
 
 func TestHandleAnyRequest_MalformedBody(t *testing.T) {
@@ -89,6 +92,29 @@ func TestHandleAnyRequest_MalformedBody(t *testing.T) {
 	assert.NoError(t, err)
 	// A malformed client body is a client error, not a server fault.
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+func TestHandleAnyRequest_DrainsStreamedBodyWhenNotMirroring(t *testing.T) {
+	app := fiber.New(fiber.Config{StreamRequestBody: true})
+	app.Use(handleAnyRequest)
+
+	// A large body forces fasthttp to expose it as a stream; with
+	// mirrorBody=false the handler must drain it so the request still
+	// completes cleanly instead of leaving the body unread.
+	largeBody := bytes.Repeat([]byte("a"), 5*1024*1024)
+	r := httptest.NewRequest("POST", "/test?mirrorBody=false", bytes.NewReader(largeBody))
+	r.Header.Set("Content-Type", "application/octet-stream")
+
+	resp, err := app.Test(r, -1)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var responseData map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&responseData)
+	assert.NoError(t, err)
+	assert.Equal(t, "/test", responseData["path"])
+	_, hasBody := responseData["body"]
+	assert.False(t, hasBody)
 }
 
 func TestHandleAnyRequest_WithResponseDelay(t *testing.T) {

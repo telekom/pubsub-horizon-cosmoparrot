@@ -6,6 +6,7 @@ package main
 
 import (
 	"cosmoparrot/internal/api"
+	"cosmoparrot/internal/memlimit"
 	"embed"
 	_ "embed"
 )
@@ -14,5 +15,6 @@ import (
 var webDir embed.FS
 
 func main() {
+	memlimit.Configure()
 	api.Listen(webDir)
 }
