@@ -9,6 +9,7 @@ import (
 	"cosmoparrot/internal/config"
 	"cosmoparrot/internal/utils"
 	"encoding/json"
+	"io"
 	"math/rand"
 	"slices"
 	"strconv"
@@ -43,16 +44,20 @@ func handleAnyRequest(c *fiber.Ctx) error {
 		return c.Next()
 	}
 
-	var responseBody any
+	// The request body is only read when it is echoed back.
+	var responseBody json.RawMessage
 
-	if len(c.Body()) > 0 {
-		err := json.Unmarshal(c.Body(), &responseBody)
-		if err != nil {
-			// A malformed body is a client error, not a server fault: respond 400
-			// and keep it at debug level so a flood of bad requests can't spam the logs.
-			log.Debugf("failed to deserialize request body, error: %v", err)
-			return c.SendStatus(fiber.StatusBadRequest)
+	if getMirrorBody(c) {
+		if body := c.Body(); len(body) > 0 {
+			if !json.Valid(body) {
+				log.Debug("failed to deserialize request body: invalid JSON")
+				return c.SendStatus(fiber.StatusBadRequest)
+			}
+			responseBody = body
 		}
+	} else if stream := c.Context().RequestBodyStream(); stream != nil {
+		// drain the streamed body so the connection can be reused
+		_, _ = io.Copy(io.Discard, stream)
 	}
 
 	setResponseHeaders(c)
@@ -92,12 +97,6 @@ func handleAnyRequest(c *fiber.Ctx) error {
 
 		// write to store
 		cache.Current.Set(key, string(jsonData), go_cache.DefaultExpiration)
-	}
-
-	// suppress the echoed request body if the client opted out; the stored
-	// copy above intentionally keeps the full body for later inspection.
-	if !getMirrorBody(c) {
-		reqData.Body = nil
 	}
 
 	if delay := getResponseDelay(c); delay > 0 {

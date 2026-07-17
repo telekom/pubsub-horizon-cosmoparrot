@@ -4,13 +4,16 @@
 
 package api
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type request struct {
 	Time    time.Time           `json:"time"`
 	Path    string              `json:"path"`
 	Method  string              `json:"method"`
 	Headers map[string][]string `json:"headers,omitempty"`
-	Body    any                 `json:"body,omitempty"`
+	Body    json.RawMessage     `json:"body,omitempty"`
 	Padding string              `json:"padding,omitempty"`
 }
