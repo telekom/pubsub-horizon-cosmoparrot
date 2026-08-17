@@ -8,7 +8,7 @@ go 1.24.0
 
 require (
 	github.com/gofiber/contrib/otelfiber/v2 v2.0.0
-	github.com/gofiber/fiber/v2 v2.52.14
+	github.com/gofiber/fiber/v2 v2.52.15
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/rs/zerolog v1.35.1
 	github.com/spf13/viper v1.21.0
