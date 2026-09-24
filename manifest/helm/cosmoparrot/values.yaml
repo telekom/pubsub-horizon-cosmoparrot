@@ -59,5 +59,30 @@ imagePullSecrets: []
 
 podAnnotations: {}
 
-affinity:
-  nodeAffinity: []
+nodeSelector: {}
+
+tolerations: []
+
+# Rendered as-is into the pod spec.
+affinity: {}
+  # Example:
+  # podAntiAffinity:
+  #   preferredDuringSchedulingIgnoredDuringExecution:
+  #     - weight: 100
+  #       podAffinityTerm:
+  #         topologyKey: kubernetes.io/hostname
+  #         labelSelector:
+  #           matchLabels:
+  #             app: cosmoparrot
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # Set to a percentage to also scale on memory utilization.
+  targetMemoryUtilizationPercentage:
+  # Additional HPA metrics rendered as-is (e.g. pods or external metrics).
+  extraMetrics: []
+  # Rendered as-is into spec.behavior.
+  behavior: {}
