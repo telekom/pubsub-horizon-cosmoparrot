@@ -9,6 +9,10 @@ image:
   tag: latest
   pullPolicy: IfNotPresent
 
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
 service:
   name: cosmoparrot
   type: ClusterIP
@@ -73,7 +77,8 @@ affinity: {}
   #         topologyKey: kubernetes.io/hostname
   #         labelSelector:
   #           matchLabels:
-  #             app: cosmoparrot
+  #             app.kubernetes.io/name: cosmoparrot
+  #             app.kubernetes.io/instance: cosmoparrot
 
 autoscaling:
   enabled: false
