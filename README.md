@@ -48,7 +48,7 @@ docker build -t cosmoparrot:latest  .
 ```
 
 ## Configuration
-Cosmoparrot supports configuration via environment variables and/or a configuration file (`config.yml`). The configuration file has to be located in the same directory as the executable.
+Cosmoparrot supports configuration via environment variables and/or a configuration file (`config.yml`). The configuration file has to be located in the same directory as the executable. If the file exists but cannot be read or parsed, Cosmoparrot exits with an error. The container image runs as UID/GID `65532`, so a mounted `config.yml` must be readable by that user.
 
 | Path                        | Variable                              | Type   | Default | Description                                                                              |
 |-----------------------------|---------------------------------------|--------|---------|------------------------------------------------------------------------------------------|
