@@ -59,9 +59,10 @@ func loadConfiguration() {
 
 	if err := viper.ReadInConfig(); err != nil {
 		var configFileNotFoundError viper.ConfigFileNotFoundError
-		if errors.As(err, &configFileNotFoundError) {
-			log.Info("configuration not found but environment variables will be taken into account.")
+		if !errors.As(err, &configFileNotFoundError) {
+			log.Fatalf("failed to read configuration file: %v", err)
 		}
+		log.Info("configuration not found but environment variables will be taken into account.")
 	}
 
 	viper.AutomaticEnv()

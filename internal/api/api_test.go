@@ -6,6 +6,7 @@ package api
 import (
 	"embed"
 	"github.com/stretchr/testify/assert"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -18,6 +19,20 @@ func TestHandleGetAllRequests(t *testing.T) {
 	resp, _ := app.Test(req)
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+}
+
+func TestNewApp_EchoKeepsSpecialCharactersLiteral(t *testing.T) {
+	app := NewApp(embed.FS{})
+
+	req := httptest.NewRequest(http.MethodGet, "/apis/x/y?limit=1&b=%2F&c=<a>", nil)
+	resp, err := app.Test(req)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	body, err := io.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	assert.Contains(t, string(body), `"query":"limit=1&b=%2F&c=<a>"`)
+	assert.Contains(t, string(body), `"requestUri":"/apis/x/y?limit=1&b=%2F&c=<a>"`)
 }
 
 func TestHandleGetRequestByKey(t *testing.T) {
