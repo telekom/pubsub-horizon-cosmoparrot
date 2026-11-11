@@ -1,0 +1,21 @@
+.github/workflows/ci.yml
+  s_06ddeefd9485d1::t_782fde9283d7e3 32-65
+Dockerfile
+  s_06ddeefd9485d1::t_70e6f44c56a98d 5,8-9,18,21-26,29
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.7",
+  "base_commit_sha": "c300278bceffdf3bd329a5fbbef1f2f2390f4cdc",
+  "prompts": {},
+  "sessions": {
+    "s_06ddeefd9485d1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e35e88e71ffeopkD3Mmreo37JI",
+        "model": "github-copilot/claude-opus-5.5-long"
+      },
+      "human_author": null
+    }
+  }
+}
