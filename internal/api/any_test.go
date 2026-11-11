@@ -95,6 +95,9 @@ func TestHandleAnyRequest_EchoesRawQueryAndRequestURI(t *testing.T) {
 			app.Use(handleAnyRequest)
 
 			storeKey := "raw-query-" + tt.name
+			cache.Current.Delete(storeKey)
+			t.Cleanup(func() { cache.Current.Delete(storeKey) })
+
 			r := httptest.NewRequest(http.MethodGet, tt.target, nil)
 			r.Header.Set("X-Request-Key", storeKey)
 
