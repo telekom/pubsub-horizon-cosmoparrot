@@ -1,0 +1,27 @@
+internal/api/any.go
+  s_06ddeefd9485d1::t_7e399dbcf16853 66-72
+internal/api/types.go
+  s_06ddeefd9485d1::t_cc9c75e34c99f4 13-22
+internal/api/any_test.go
+  s_06ddeefd9485d1::t_a6155cab141eb3 53-104,106-125
+  s_06ddeefd9485d1::t_0bfdcb109d4244 105
+README.md
+  s_06ddeefd9485d1::t_4298cb7b3a339e 73,75-77,80-102
+  s_06ddeefd9485d1::t_3daa6cae99277b 103
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.7",
+  "base_commit_sha": "b1cebe9f215d16e8bb6cf236279564f412b777dc",
+  "prompts": {},
+  "sessions": {
+    "s_06ddeefd9485d1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e35e88e71ffeopkD3Mmreo37JI",
+        "model": "github-copilot/claude-opus-5.5-long"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}
