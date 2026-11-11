@@ -63,11 +63,13 @@ func handleAnyRequest(c *fiber.Ctx) error {
 	setResponseHeaders(c)
 
 	reqData := &request{
-		Time:    time.Now(),
-		Path:    c.Path(),
-		Method:  c.Method(),
-		Headers: c.GetReqHeaders(),
-		Body:    responseBody,
+		Time:       time.Now(),
+		Path:       c.Path(),
+		Query:      string(c.Request().URI().QueryString()),
+		RequestURI: c.OriginalURL(),
+		Method:     c.Method(),
+		Headers:    c.GetReqHeaders(),
+		Body:       responseBody,
 	}
 
 	// write request to store if request key is found

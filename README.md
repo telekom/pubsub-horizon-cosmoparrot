@@ -70,9 +70,36 @@ When tracing is enabled, exporter behavior can be configured via standard OpenTe
 ## Endpoints
 
 ### Echo (catch-all)
-Any request that does not match a specific route is handled by the echo handler. It mirrors the request back as a JSON response including path, method, headers, and body.
+Any request that does not match a specific route is handled by the echo handler. It mirrors the request back as a JSON response including path, query, request URI, method, headers, and body.
 
+- `path` is the request path.
+- `query` is the raw query string as received, without the leading `?`. It is not decoded, re-encoded, or reordered. The field is omitted when the request has no query.
+- `requestUri` is the request target as received on the request line, including the query and escaped characters.
 - Supports `?mirrorBody=false` to suppress echoing the request body back in the response body (defaults to `true`). When disabled, the request body is not read at all — it is neither echoed nor stored, and is not validated (no `400` on malformed JSON). This keeps large payloads off-heap.
+
+Example:
+
+```bash
+curl -H 'Audit-Id: 1234' 'localhost:8080/apis/x/y?limit=1&b=%2F'
+```
+
+```json
+{
+  "time": "2026-11-11T10:15:23.102683969Z",
+  "path": "/apis/x/y",
+  "query": "limit=1&b=%2F",
+  "requestUri": "/apis/x/y?limit=1&b=%2F",
+  "method": "GET",
+  "headers": {
+    "Accept": ["*/*"],
+    "Audit-Id": ["1234"],
+    "Host": ["localhost:8080"],
+    "User-Agent": ["curl/8.22.0"]
+  }
+}
+```
+
+Stored requests (`/api/v1/requests`) contain the same fields.
 
 ### Request store
 The echo handler can record incoming requests in an in-memory cache so they can be retrieved later via `/api/v1/requests` and `/api/v1/requests/:key` (useful for asserting, in tests, what a component sent). A request is stored only when it carries one of the headers listed in `storeKeyRequestHeaders`, keyed by that header's value; entries expire after 1 hour.

@@ -50,6 +50,79 @@ func TestHandleAnyRequest(t *testing.T) {
 	assert.JSONEq(t, `{"message": "test"}`, string(cachedRequests[0].Body))
 }
 
+func TestHandleAnyRequest_EchoesRawQueryAndRequestURI(t *testing.T) {
+	tests := []struct {
+		name       string
+		target     string
+		query      string
+		requestURI string
+	}{
+		{
+			name:       "no query",
+			target:     "/apis/x/y",
+			query:      "",
+			requestURI: "/apis/x/y",
+		},
+		{
+			name:       "empty query",
+			target:     "/apis/x/y?",
+			query:      "",
+			requestURI: "/apis/x/y?",
+		},
+		{
+			name:       "several parameters keep their order",
+			target:     "/apis/x/y?zeta=1&alpha=2&mu=3",
+			query:      "zeta=1&alpha=2&mu=3",
+			requestURI: "/apis/x/y?zeta=1&alpha=2&mu=3",
+		},
+		{
+			name:       "percent-encoded characters stay encoded",
+			target:     "/apis/a%2Fb/c%20d?b=%2F&c=a%20b",
+			query:      "b=%2F&c=a%20b",
+			requestURI: "/apis/a%2Fb/c%20d?b=%2F&c=a%20b",
+		},
+		{
+			name:       "repeated parameter",
+			target:     "/apis/x/y?limit=1&b=%2F&limit=2",
+			query:      "limit=1&b=%2F&limit=2",
+			requestURI: "/apis/x/y?limit=1&b=%2F&limit=2",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			app := fiber.New()
+			app.Use(handleAnyRequest)
+
+			storeKey := "raw-query-" + tt.name
+			r := httptest.NewRequest(http.MethodGet, tt.target, nil)
+			r.Header.Set("X-Request-Key", storeKey)
+
+			resp, err := app.Test(r, -1)
+			assert.NoError(t, err)
+			assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+			var responseData map[string]any
+			assert.NoError(t, json.NewDecoder(resp.Body).Decode(&responseData))
+
+			assert.Equal(t, tt.requestURI, responseData["requestUri"])
+			if tt.query == "" {
+				assert.NotContains(t, responseData, "query")
+			} else {
+				assert.Equal(t, tt.query, responseData["query"])
+			}
+
+			var cachedRequests []*request
+			entry, found := cache.Current.Get(storeKey)
+			assert.True(t, found)
+			assert.NoError(t, json.Unmarshal([]byte(entry.(string)), &cachedRequests))
+			assert.Len(t, cachedRequests, 1)
+			assert.Equal(t, tt.query, cachedRequests[0].Query)
+			assert.Equal(t, tt.requestURI, cachedRequests[0].RequestURI)
+		})
+	}
+}
+
 func TestHandleAnyRequest_MirrorBodyDisabled(t *testing.T) {
 	app := fiber.New()
 	app.Use(handleAnyRequest)
