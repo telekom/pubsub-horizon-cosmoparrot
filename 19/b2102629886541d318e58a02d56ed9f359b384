@@ -1,0 +1,34 @@
+internal/api/api_test.go
+  s_06ddeefd9485d1::t_e79f18c1a1b2db 9
+  s_06ddeefd9485d1::t_cf55b71ae165c5 24-37
+README.md
+  s_06ddeefd9485d1::t_4298cb7b3a339e 73,75-77,80-102
+  s_06ddeefd9485d1::t_3daa6cae99277b 103
+internal/api/types.go
+  s_06ddeefd9485d1::t_cc9c75e34c99f4 13-22
+internal/api/api.go
+  s_06ddeefd9485d1::t_565b13f718b834 8,11
+  s_06ddeefd9485d1::t_fb8287d187d4f5 64-75
+  s_06ddeefd9485d1::t_b458f62d0e5ad8 25
+internal/api/any_test.go
+  s_06ddeefd9485d1::t_0bfdcb109d4244 105
+  s_06ddeefd9485d1::t_a6155cab141eb3 53-104,106-125
+internal/api/any.go
+  s_06ddeefd9485d1::t_7e399dbcf16853 66-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.7",
+  "base_commit_sha": "19b2102629886541d318e58a02d56ed9f359b384",
+  "prompts": {},
+  "sessions": {
+    "s_06ddeefd9485d1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e35e88e71ffeopkD3Mmreo37JI",
+        "model": "github-copilot/claude-opus-5.5-long"
+      },
+      "human_author": null
+    }
+  }
+}
