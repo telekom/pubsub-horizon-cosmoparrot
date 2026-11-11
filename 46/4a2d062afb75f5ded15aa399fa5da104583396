@@ -1,0 +1,19 @@
+internal/config/config_test.go
+  s_06ddeefd9485d1::t_8870d66efc2954 9-10,89-111
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.7",
+  "base_commit_sha": "464a2d062afb75f5ded15aa399fa5da104583396",
+  "prompts": {},
+  "sessions": {
+    "s_06ddeefd9485d1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e35e88e71ffeopkD3Mmreo37JI",
+        "model": "github-copilot/claude-opus-5.5-long"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}
