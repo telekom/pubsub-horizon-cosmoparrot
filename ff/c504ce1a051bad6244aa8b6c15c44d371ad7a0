@@ -1,0 +1,21 @@
+manifest/helm/cosmoparrot/Chart.yaml
+  s_06ddeefd9485d1::t_da6f5fc8b50522 8
+manifest/helm/cosmoparrot/templates/deployment.yaml
+  s_06ddeefd9485d1::t_da6f5fc8b50522 32-35,63-64
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.7",
+  "base_commit_sha": "ffc504ce1a051bad6244aa8b6c15c44d371ad7a0",
+  "prompts": {},
+  "sessions": {
+    "s_06ddeefd9485d1": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e35e88e71ffeopkD3Mmreo37JI",
+        "model": "github-copilot/claude-opus-5.5-long"
+      },
+      "human_author": "Niklas Beilmann <niklas.beilmann@telekom.de>"
+    }
+  }
+}
