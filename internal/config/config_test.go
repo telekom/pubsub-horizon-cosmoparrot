@@ -6,6 +6,8 @@ package config
 
 import (
 	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/spf13/viper"
@@ -83,4 +85,27 @@ func TestConfigFileNotFound(t *testing.T) {
 	assert.Equal(t, 8080, LoadedConfiguration.Port)
 	assert.Equal(t, 200, LoadedConfiguration.ResponseCode)
 	assert.Equal(t, []string{"x-request-key"}, LoadedConfiguration.StoreKeyRequestHeaders)
+}
+
+func TestLoadConfigurationFailsOnBrokenConfigFile(t *testing.T) {
+	if os.Getenv("COSMOPARROT_TEST_BROKEN_CONFIG") == "1" {
+		viper.Reset()
+		setDefaults()
+		loadConfiguration()
+		return
+	}
+
+	// A config.yml that exists but cannot be used must stop the process.
+	// The subprocess runs in a directory that contains a broken config.yml.
+	dir := t.TempDir()
+	assert.NoError(t, os.WriteFile(filepath.Join(dir, "config.yml"), []byte("port: [\n"), 0o600))
+
+	cmd := exec.Command(os.Args[0], "-test.run=^TestLoadConfigurationFailsOnBrokenConfigFile$")
+	cmd.Dir = dir
+	cmd.Env = append(os.Environ(), "COSMOPARROT_TEST_BROKEN_CONFIG=1")
+	out, err := cmd.CombinedOutput()
+
+	var exitErr *exec.ExitError
+	assert.ErrorAs(t, err, &exitErr)
+	assert.Contains(t, string(out), "failed to read configuration file")
 }

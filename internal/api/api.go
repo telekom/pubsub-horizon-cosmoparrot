@@ -5,8 +5,10 @@
 package api
 
 import (
+	"bytes"
 	"cosmoparrot/internal/config"
 	"embed"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -20,6 +22,7 @@ import (
 func NewApp(f embed.FS) *fiber.App {
 	app := fiber.New(fiber.Config{
 		StreamRequestBody: true,
+		JSONEncoder:       marshalJSONWithoutHTMLEscape,
 	})
 	var shutdownTracing func()
 	apiMiddleware := make([]fiber.Handler, 0)
@@ -57,4 +60,16 @@ func NewApp(f embed.FS) *fiber.App {
 func Listen(f embed.FS) {
 	app := NewApp(f)
 	log.Fatal(app.Listen(fmt.Sprintf(":%d", config.LoadedConfiguration.Port)))
+}
+
+// marshalJSONWithoutHTMLEscape works like json.Marshal, but keeps &, < and >
+// as literal characters, so echoed values match the request byte for byte.
+func marshalJSONWithoutHTMLEscape(v any) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(v); err != nil {
+		return nil, err
+	}
+	return bytes.TrimSuffix(buf.Bytes(), []byte("\n")), nil
 }
